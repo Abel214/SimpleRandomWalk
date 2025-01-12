@@ -41,6 +41,7 @@ class PanelJuego:
 
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
+        self.grid.spawn_initial_food(10)  # Generar las 10 comidas iniciales
         self.simulate_step()
 
     def simulate_step(self):
@@ -51,7 +52,13 @@ class PanelJuego:
         if is_alive:
             self.root.after(500, self.simulate_step)
         else:
-            print("La bacteria ha muerto.")
+            print(f"Simulación completada. Ciclos terminados: {self.bacteria.num_cycles}")
+            self.end_simulation()
+
+    def end_simulation(self):
+        """Finaliza la simulación"""
+        self.grid.canvas.delete('bacteria')
+        print("Fin de la simulación.")
 
 
 root = tk.Tk()
