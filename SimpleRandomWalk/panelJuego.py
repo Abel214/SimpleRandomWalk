@@ -8,6 +8,7 @@ class PanelJuego:
         self.root = root
         self.setup_ui()
         self.grid.spawn_food()  # Generar comida inicial
+        self.simulation_timer = None
         self.start_simulation()
 
     def setup_ui(self):
@@ -27,7 +28,16 @@ class PanelJuego:
             bg='gray10'
         )
         self.control_panel.pack(fill='x', pady=(0, 10))
-
+        self.repeat_button = tk.Button(
+            self.control_panel,
+            text="Repetir",
+            command=self.restart_game,
+            bg='gray30',
+            fg='white',
+            font=("Arial", 12),
+            relief="raised"
+        )
+        self.repeat_button.pack(side="left", padx=10)
         # Panel para la grid
         self.game_frame = tk.Frame(
             self.panel,
@@ -50,7 +60,11 @@ class PanelJuego:
 
         # Si la bacteria sigue viva, llama a simulate_step después de 500 ms
         if is_alive:
-            self.root.after(500, self.simulate_step)
+            # Si ya hay un temporizador activo, cancelarlo
+            if self.simulation_timer is not None:
+                self.root.after_cancel(self.simulation_timer)
+            # Programar el siguiente paso
+            self.simulation_timer = self.root.after(1000, self.simulate_step)
         else:
             print(f"Simulación completada. Ciclos terminados: {self.bacteria.num_cycles}")
             self.end_simulation()
@@ -60,6 +74,17 @@ class PanelJuego:
         self.grid.canvas.delete('bacteria')
         print("Fin de la simulación.")
 
+    def restart_game(self):
+        """Reiniciar el juego"""
+        if self.simulation_timer is not None:
+            self.root.after_cancel(self.simulation_timer)
+        # Limpiar la cuadrícula y reiniciar la bacteria
+        self.grid.create_grid()
+        self.bacteria = Bacteria(self.grid)
+
+        # Volver a generar comida inicial y reiniciar la simulación
+        self.grid.spawn_food()
+        self.start_simulation()
 
 root = tk.Tk()
 app = PanelJuego(root)

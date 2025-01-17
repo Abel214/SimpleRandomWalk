@@ -7,7 +7,7 @@ class Bacteria:
         self.canvas = grid.canvas
         self.cell_size = grid.cell_size
         self.grid_size = grid.size
-        self.life_time = 5
+        self.life_time = 6 #se define esta variable porque son los pasos que va a seguir la bacteria en el primer ciclo
         self.num_cycles = 0
         self.max_cycles = 3
         self.initial_move = True
@@ -44,13 +44,12 @@ class Bacteria:
             # Verificar que el movimiento:
             # 1. No se salga de la cuadrícula
             # 2. No toque los bordes si no es el movimiento inicial
-            # 3. No regrese a la posición anterior
+
             if (0 <= new_x < self.grid_size and
                     0 <= new_y < self.grid_size and
                     (self.initial_move or
                      (0 < new_x < self.grid_size - 1 and
-                      0 < new_y < self.grid_size - 1)) and
-                    (new_x, new_y) != self.last_position):
+                      0 < new_y < self.grid_size - 1))) :
                 valid_moves.append((dx, dy))
 
         return valid_moves
@@ -72,11 +71,11 @@ class Bacteria:
 
     def move(self):
         """Mueve la bacteria con restricciones de movimiento"""
-        if self.life_time <= 0:
+        if self.life_time <= 0: #cuando la vida de la bacteria llega a 0 no se mueve
             self.num_cycles += 1
             if self.num_cycles >= self.max_cycles:
                 return False
-            self.life_time = 5
+            self.life_time = 5 #se reinicia la vida de la bacteria para los demas ciclos
             self.initial_move = True
             self.last_position = None
             self.create_initial_point()
@@ -84,7 +83,14 @@ class Bacteria:
 
         # Obtener movimientos válidos según la situación
         if self.initial_move:
-            valid_moves = self.initial_directions
+            valid_moves = []
+            # Verificar si el primer movimiento no lleva a la posición inicial
+            for move in self.initial_directions:
+                new_x, new_y = self.grid_x + move[0], self.grid_y + move[1]
+                # Asegurarse de que no regrese a la posición inicial
+                if (new_x, new_y) != (self.grid_x, self.grid_y):
+                    valid_moves.append(move)
+
         else:
             valid_moves = self.get_valid_moves()
 
@@ -108,7 +114,8 @@ class Bacteria:
 
         self.draw_point()
         self.initial_move = False
-        self.life_time -= 1
+
+        self.life_time -= 1 #cada vez que se mueve la bacteria se debe restar uno de la vida que tiene
         return True
 
     def check_food_collision(self):
