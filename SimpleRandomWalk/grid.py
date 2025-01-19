@@ -39,18 +39,18 @@ class Grid:
                 fill='gray20'
             )
 
-    def spawn_food(self):
-        """Genera una nueva comida en una posición aleatoria vacía"""
-        while True:
-            x = choice(range(self.size))
-            y = choice(range(self.size))
-            position = (x, y)
-
-            # Asegura que la comida no reaparezca en una posición ya ocupada
-            if position not in self.food_positions:
-                self.food_positions.add(position)
-                self.draw_food(position)
-                break
+    def spawn_food(self, num_food):
+        self.canvas.delete('food')
+        self.food_positions.clear()
+        for _ in range(num_food):
+            while True:
+                x = choice(range(self.size))
+                y = choice(range(self.size))
+                position = (x, y)
+                if position not in self.food_positions:
+                    self.food_positions.add(position)
+                    self.draw_food(position)
+                    break
 
     def spawn_initial_food(self, num_food=10):
         """Genera un número inicial de comidas aleatorias"""

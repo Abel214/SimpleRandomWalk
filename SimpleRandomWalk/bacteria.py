@@ -1,12 +1,12 @@
 from random import choice
 
 class Bacteria:
-    def __init__(self, grid, bacteria_id):
+    def __init__(self, grid, update_cycle_callback, bacteria_id, life_time=6):
         self.grid = grid
         self.canvas = grid.canvas
         self.cell_size = grid.cell_size
         self.grid_size = grid.size
-        self.life_time = 6
+        self.life_time = life_time  
         self.num_cycles = 0
         self.max_cycles = 3
         self.initial_move = True
@@ -14,6 +14,7 @@ class Bacteria:
         self.bacteria_id = bacteria_id  # Aquí asignamos el bacteria_id
         self.is_alive = True  # Estado inicial de la bacteria
         self.has_eaten = False
+        self.waiting_for_others = False
         self.create_initial_point()
         self.update_cycle_callback = update_cycle_callback  # Callback para actualizar el ciclo
 
@@ -64,6 +65,7 @@ class Bacteria:
             # Verificar que el movimiento:
             # 1. No se salga de la cuadrícula
             # 2. No toque los bordes si no es el movimiento inicial
+
             if (0 <= new_x < self.grid_size and
                     0 <= new_y < self.grid_size and
                     (self.initial_move or
@@ -116,9 +118,10 @@ class Bacteria:
         # Verificar colisión con comida
         if self.check_food_collision():
             print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
-            self.life_time = 6  # Reiniciar vida después de comer
-            self.num_cycles += 1
-            return True  # Continúa viva para el siguiente ciclo
+            self.life_time = 6
+            self.has_eaten = True
+            self.waiting_for_others = True  # Se queda esperando
+            return True
 
         # Dibujar el punto en la nueva posición
         self.draw_point()
@@ -132,6 +135,9 @@ class Bacteria:
         else:
             print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
 
+        # Actualizar el ciclo en la interfaz
+        self.update_cycle_callback(self.num_cycles)
+
         return self.is_alive
 
     def check_food_collision(self):
@@ -141,6 +147,7 @@ class Bacteria:
             self.grid.food_positions.remove(current_pos)
             self.grid.canvas.delete('food')
             self.grid.redraw_food()
+            self.has_eaten = True
             return True
         return False
 
@@ -160,4 +167,3 @@ class Bacteria:
         self.last_position = None
         self.create_initial_point()
         return True
-

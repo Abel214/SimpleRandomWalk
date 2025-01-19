@@ -1,15 +1,18 @@
 import tkinter as tk
 from grid import Grid
+from tkinter import simpledialog
 from bacteria import Bacteria
 
 
 class PanelJuego:
-    def __init__(self, root, num_bacterias=3):
+    def __init__(self, root, num_bacterias=3, num_food=10, life_time=20):
         self.root = root
         self.num_bacterias = num_bacterias
+        self.num_food = num_food
+        self.life_time = life_time
         self.ciclo_actual = 1  # Contador de ciclos, empezamos en 1
         self.setup_ui()
-        self.grid.spawn_food()  # Generar comida inicial
+        self.grid.spawn_food(self.num_food)
         self.simulation_timer = None
         self.start_simulation()
 
@@ -62,10 +65,11 @@ class PanelJuego:
 
         # Crear la grid dentro del panel de juego
         self.grid = Grid(self.game_frame)
-        self.bacteria = Bacteria(self.grid, self.update_cycle)
+        #self.bacteria = Bacteria(self.grid, self.update_cycle)
 
         # Crear las bacterias con identificadores únicos
-        self.bacterias = [Bacteria(self.grid, bacteria_id=i) for i in range(self.num_bacterias)]
+        self.bacterias = [Bacteria(self.grid, self.update_cycle, bacteria_id=i, life_time=self.life_time) for i in range(self.num_bacterias)]
+
 
 
 
@@ -76,27 +80,24 @@ class PanelJuego:
 
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
-        self.grid.spawn_initial_food(10)  # Generar las 10 comidas iniciales
         self.simulate_step()
         
 
     def simulate_step(self):
-        """Simular un paso de movimiento de las bacterias."""
         print("\n--- Inicio de ciclo ---")
-        # Actualizar el estado de todas las bacterias
-        for bacteria in self.bacterias:
-            bacteria.move()
-
-        # Verificar cuántas bacterias están vivas
+        if self.ciclo_actual > self.life_time:
+            print("Simulación completada. Se alcanzó el máximo de pasos.")
+            self.end_simulation()
+            return
         alive_bacterias = [bacteria for bacteria in self.bacterias if bacteria.is_alive]
-
-        if not alive_bacterias:  # Si no quedan bacterias vivas
+        if not alive_bacterias:
             print("Todas las bacterias murieron. Simulación finalizada.")
             self.end_simulation()
             return
-
-        # Continuar con el siguiente ciclo
-        print(f"Bacterias vivas: {[b.bacteria_id for b in alive_bacterias]}")
+        for bacteria in alive_bacterias:
+            bacteria.move()
+        self.ciclo_actual += 1
+        print(f"Ciclo: {self.ciclo_actual}, Bacterias vivas: {[b.bacteria_id for b in alive_bacterias]}")
         self.simulation_timer = self.root.after(1000, self.simulate_step)
 
     def end_simulation(self):
@@ -113,17 +114,22 @@ class PanelJuego:
             self.root.after_cancel(self.simulation_timer)
         # Limpiar la cuadrícula y reiniciar las bacterias
         self.grid.create_grid()
-        self.bacterias = [Bacteria(self.grid, bacteria_id=i) for i in range(self.num_bacterias)]
-        self.bacteria = Bacteria(self.grid, self.update_cycle)
+        self.bacterias = [Bacteria(self.grid, self.update_cycle, bacteria_id=i, life_time=self.life_time) for i in range(self.num_bacterias)]
+
 
         # Restablecer el ciclo a 1
         self.ciclo_actual = 1
         self.ciclo_label.config(text=f"Ciclo: {self.ciclo_actual}")
 
         # Volver a generar comida inicial y reiniciar la simulación
-        self.grid.spawn_food()
+        self.grid.spawn_food(self.num_food)
         self.start_simulation()
 
-root = tk.Tk()
-app = PanelJuego(root)
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    num_food = simpledialog.askinteger("Configuración", "Ingrese el número de comidas:", minvalue=1, maxvalue=100)
+    life_time = simpledialog.askinteger("Configuración", "Ingrese el tiempo de vida de las bacterias:", minvalue=1, maxvalue=100)
+    
+    if num_food and life_time:
+        app = PanelJuego(root, num_bacterias=3, num_food=num_food, life_time=life_time)
+        root.mainloop()
