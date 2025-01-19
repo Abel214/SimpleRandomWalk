@@ -2,17 +2,18 @@ from random import choice
 
 
 class Bacteria:
-    def __init__(self, grid):
+    def __init__(self, grid, update_cycle_callback):
         self.grid = grid
         self.canvas = grid.canvas
         self.cell_size = grid.cell_size
         self.grid_size = grid.size
-        self.life_time = 6 #se define esta variable porque son los pasos que va a seguir la bacteria en el primer ciclo
+        self.life_time = 6  # pasos en el primer ciclo
         self.num_cycles = 0
         self.max_cycles = 3
         self.initial_move = True
         self.last_position = None  # Guardar la última posición
         self.create_initial_point()
+        self.update_cycle_callback = update_cycle_callback  # Callback para actualizar el ciclo
 
     def create_initial_point(self):
         """Crea la bacteria en una de las cuatro esquinas y define su dirección inicial"""
@@ -44,12 +45,11 @@ class Bacteria:
             # Verificar que el movimiento:
             # 1. No se salga de la cuadrícula
             # 2. No toque los bordes si no es el movimiento inicial
-
             if (0 <= new_x < self.grid_size and
                     0 <= new_y < self.grid_size and
                     (self.initial_move or
                      (0 < new_x < self.grid_size - 1 and
-                      0 < new_y < self.grid_size - 1))) :
+                      0 < new_y < self.grid_size - 1))):
                 valid_moves.append((dx, dy))
 
         return valid_moves
@@ -71,14 +71,18 @@ class Bacteria:
 
     def move(self):
         """Mueve la bacteria con restricciones de movimiento"""
-        if self.life_time <= 0: #cuando la vida de la bacteria llega a 0 no se mueve
+        if self.life_time <= 0:  # Cuando la vida de la bacteria llega a 0 no se mueve
             self.num_cycles += 1
             if self.num_cycles >= self.max_cycles:
                 return False
-            self.life_time = 5 #se reinicia la vida de la bacteria para los demas ciclos
+            self.life_time = 5  # Se reinicia la vida de la bacteria para los demás ciclos
             self.initial_move = True
             self.last_position = None
             self.create_initial_point()
+
+            # Actualiza el ciclo en la interfaz
+            self.update_cycle_callback(self.num_cycles)
+
             return True
 
         # Obtener movimientos válidos según la situación
@@ -90,7 +94,6 @@ class Bacteria:
                 # Asegurarse de que no regrese a la posición inicial
                 if (new_x, new_y) != (self.grid_x, self.grid_y):
                     valid_moves.append(move)
-
         else:
             valid_moves = self.get_valid_moves()
 
@@ -115,7 +118,7 @@ class Bacteria:
         self.draw_point()
         self.initial_move = False
 
-        self.life_time -= 1 #cada vez que se mueve la bacteria se debe restar uno de la vida que tiene
+        self.life_time -= 1  # Cada vez que se mueve la bacteria se debe restar uno de la vida que tiene
         return True
 
     def check_food_collision(self):
@@ -127,4 +130,5 @@ class Bacteria:
             self.grid.redraw_food()
             return True
         return False
+
 

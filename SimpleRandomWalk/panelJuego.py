@@ -6,6 +6,7 @@ from bacteria import Bacteria
 class PanelJuego:
     def __init__(self, root):
         self.root = root
+        self.ciclo_actual = 1  # Contador de ciclos, empezamos en 1
         self.setup_ui()
         self.grid.spawn_food()  # Generar comida inicial
         self.simulation_timer = None
@@ -28,6 +29,18 @@ class PanelJuego:
             bg='gray10'
         )
         self.control_panel.pack(fill='x', pady=(0, 10))
+        
+        # Etiqueta para mostrar el ciclo actual
+        self.ciclo_label = tk.Label(
+            self.control_panel,
+            text=f"Ciclo: {self.ciclo_actual}",
+            bg='gray10',
+            fg='white',
+            font=("Arial", 12)
+        )
+        self.ciclo_label.pack(side="left", padx=10)
+
+        # Botón de repetir
         self.repeat_button = tk.Button(
             self.control_panel,
             text="Repetir",
@@ -38,6 +51,7 @@ class PanelJuego:
             relief="raised"
         )
         self.repeat_button.pack(side="left", padx=10)
+
         # Panel para la grid
         self.game_frame = tk.Frame(
             self.panel,
@@ -47,12 +61,18 @@ class PanelJuego:
 
         # Crear la grid dentro del panel de juego
         self.grid = Grid(self.game_frame)
-        self.bacteria = Bacteria(self.grid)
+        self.bacteria = Bacteria(self.grid, self.update_cycle)
+
+    def update_cycle(self, num_cycles):
+        """Método para actualizar el ciclo en la interfaz"""
+        self.ciclo_actual = num_cycles + 1
+        self.ciclo_label.config(text=f"Ciclo: {self.ciclo_actual}")
 
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
         self.grid.spawn_initial_food(10)  # Generar las 10 comidas iniciales
         self.simulate_step()
+        
 
     def simulate_step(self):
         """Simular un paso de movimiento de la bacteria"""
@@ -74,13 +94,16 @@ class PanelJuego:
         self.grid.canvas.delete('bacteria')
         print("Fin de la simulación.")
 
+       # Actualizar el ciclo actual en el label
+        self.ciclo_label.config(text=f"Ciclo: {self.ciclo_actual}")
+
     def restart_game(self):
         """Reiniciar el juego"""
         if self.simulation_timer is not None:
             self.root.after_cancel(self.simulation_timer)
         # Limpiar la cuadrícula y reiniciar la bacteria
         self.grid.create_grid()
-        self.bacteria = Bacteria(self.grid)
+        self.bacteria = Bacteria(self.grid, self.update_cycle)
 
         # Volver a generar comida inicial y reiniciar la simulación
         self.grid.spawn_food()
