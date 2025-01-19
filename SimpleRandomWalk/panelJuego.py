@@ -4,7 +4,7 @@ from grid import Grid
 
 
 class PanelJuego:
-    def __init__(self, root, num_bacterias=3):
+    def __init__(self, root, num_bacterias=7):
         self.root = root
         self.num_bacterias = num_bacterias
         self.setup_ui()

@@ -14,6 +14,7 @@ class Bacteria:
         self.bacteria_id = bacteria_id  # Aquí asignamos el bacteria_id
         self.is_alive = True  # Estado inicial de la bacteria
         self.has_eaten = False
+        self.waiting_for_others = False
         self.create_initial_point()
 
 
@@ -116,9 +117,10 @@ class Bacteria:
         # Verificar colisión con comida
         if self.check_food_collision():
             print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
-            self.life_time = 6  # Reiniciar vida después de comer
-            self.num_cycles += 1
-            return True  # Continúa viva para el siguiente ciclo
+            self.life_time = 6
+            self.has_eaten = True
+            self.waiting_for_others = True  # Se queda esperando
+            return True
 
         # Dibujar el punto en la nueva posición
         self.draw_point()
@@ -141,6 +143,7 @@ class Bacteria:
             self.grid.food_positions.remove(current_pos)
             self.grid.canvas.delete('food')
             self.grid.redraw_food()
+            self.has_eaten = True
             return True
         return False
 
