@@ -1,6 +1,6 @@
 import tkinter as tk
-from SimpleRandomWalk.bacteria import Bacteria
 from grid import Grid
+from bacteria import Bacteria
 
 
 class PanelJuego:
