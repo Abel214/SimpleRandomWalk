@@ -55,6 +55,18 @@ class PanelJuego:
             relief="raised"
         )
         self.repeat_button.pack(side="left", padx=10)
+        
+        # Botón de nuevos parámetros
+        self.new_params_button = tk.Button(
+            self.control_panel,
+            text="Nuevos Parámetros",
+            command=self.set_new_params,
+            bg='gray30',
+            fg='white',
+            font=("Arial", 12),
+            relief="raised"
+        )
+        self.new_params_button.pack(side="left", padx=10)
 
         # Panel para la grid
         self.game_frame = tk.Frame(
@@ -124,6 +136,16 @@ class PanelJuego:
         # Volver a generar comida inicial y reiniciar la simulación
         self.grid.spawn_food(self.num_food)
         self.start_simulation()
+
+    def set_new_params(self):
+        """Solicitar nuevos parámetros y reiniciar la simulación"""
+        num_food = simpledialog.askinteger("Configuración", "Ingrese el número de comidas:", minvalue=1, maxvalue=100)
+        life_time = simpledialog.askinteger("Configuración", "Ingrese el tiempo de vida de las bacterias:", minvalue=1, maxvalue=100)
+        
+        if num_food and life_time:
+            self.num_food = num_food
+            self.life_time = life_time
+            self.restart_game()
 
 if __name__ == "__main__":
     root = tk.Tk()
