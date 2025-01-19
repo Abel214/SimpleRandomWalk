@@ -1,18 +1,19 @@
 from random import choice
 
-
 class Bacteria:
-    def __init__(self, grid):
+    def __init__(self, grid, bacteria_id):
         self.grid = grid
         self.canvas = grid.canvas
         self.cell_size = grid.cell_size
         self.grid_size = grid.size
-        self.life_time = 6 #se define esta variable porque son los pasos que va a seguir la bacteria en el primer ciclo
+        self.life_time = 6
         self.num_cycles = 0
         self.max_cycles = 3
         self.initial_move = True
-        self.last_position = None  # Guardar la última posición
+        self.last_position = None
+        self.bacteria_id = bacteria_id  # Aquí asignamos el bacteria_id
         self.create_initial_point()
+
 
     def create_initial_point(self):
         """Crea la bacteria en una de las cuatro esquinas y define su dirección inicial"""
@@ -32,6 +33,24 @@ class Bacteria:
             self.initial_directions = [(-1, 0), (0, -1)]  # Solo arriba o izquierda
 
         self.draw_point()
+    def draw_point(self):
+        """Dibuja la bacteria en la cuadrícula."""
+        pixel_x = self.grid_x * self.cell_size
+        pixel_y = self.grid_y * self.cell_size
+        self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Usa el ID para identificar cada bacteria
+        padding = self.cell_size // 4
+        # Aquí es donde se dibuja la bacteria en la cuadrícula, sin llamada recursiva
+        self.canvas.create_oval(
+            pixel_x + padding,
+            pixel_y + padding,
+            pixel_x + self.cell_size - padding,
+            pixel_y + self.cell_size - padding,
+            fill='green',
+            tag=f'bacteria_{self.bacteria_id}'  # Usamos el ID como tag único
+        )
+
+
+
 
     def get_valid_moves(self):
         """Determina los movimientos válidos basados en la posición actual"""
@@ -49,37 +68,31 @@ class Bacteria:
                     0 <= new_y < self.grid_size and
                     (self.initial_move or
                      (0 < new_x < self.grid_size - 1 and
-                      0 < new_y < self.grid_size - 1))) :
+                      0 < new_y < self.grid_size - 1))):
                 valid_moves.append((dx, dy))
 
         return valid_moves
 
     def draw_point(self):
-        """Dibuja la bacteria en su posición actual"""
+        """Dibuja la bacteria en la cuadrícula."""
         pixel_x = self.grid_x * self.cell_size
         pixel_y = self.grid_y * self.cell_size
-        self.canvas.delete('bacteria')
+        self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Usa el ID para identificar cada bacteria
         padding = self.cell_size // 4
+        # Aquí es donde se dibuja la bacteria en la cuadrícula, sin llamada recursiva
         self.canvas.create_oval(
             pixel_x + padding,
             pixel_y + padding,
             pixel_x + self.cell_size - padding,
             pixel_y + self.cell_size - padding,
             fill='green',
-            tag='bacteria'
+            tag=f'bacteria_{self.bacteria_id}'  # Usamos el ID como tag único
         )
 
     def move(self):
         """Mueve la bacteria con restricciones de movimiento"""
-        if self.life_time <= 0: #cuando la vida de la bacteria llega a 0 no se mueve
-            self.num_cycles += 1
-            if self.num_cycles >= self.max_cycles:
-                return False
-            self.life_time = 5 #se reinicia la vida de la bacteria para los demas ciclos
-            self.initial_move = True
-            self.last_position = None
-            self.create_initial_point()
-            return True
+        if self.life_time <= 0:  # cuando la vida de la bacteria llega a 0 no se mueve
+            return False
 
         # Obtener movimientos válidos según la situación
         if self.initial_move:
@@ -110,12 +123,13 @@ class Bacteria:
         self.grid_y += move[1]
 
         if self.check_food_collision():
-            self.life_time += 5
+            return self.pass_to_next_cycle()
 
         self.draw_point()
         self.initial_move = False
 
-        self.life_time -= 1 #cada vez que se mueve la bacteria se debe restar uno de la vida que tiene
+        self.life_time -= 1  # Cada vez que se mueve, se debe restar uno de la vida
+
         return True
 
     def check_food_collision(self):
@@ -128,3 +142,14 @@ class Bacteria:
             return True
         return False
 
+    def pass_to_next_cycle(self):
+        """Si la bacteria come, pasa al siguiente ciclo. Si no, termina la simulación."""
+        self.num_cycles += 1
+        if self.num_cycles >= self.max_cycles:  # Si ya alcanzó el máximo de ciclos, termina
+            return False
+        # Reiniciar el life_time para el siguiente ciclo
+        self.life_time = 6
+        self.initial_move = True
+        self.last_position = None
+        self.create_initial_point()
+        return True
