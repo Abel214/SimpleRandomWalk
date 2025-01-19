@@ -4,7 +4,7 @@ from grid import Grid
 
 
 class PanelJuego:
-    def __init__(self, root, num_bacterias=4):
+    def __init__(self, root, num_bacterias=3):
         self.root = root
         self.num_bacterias = num_bacterias
         self.setup_ui()
@@ -53,31 +53,36 @@ class PanelJuego:
         # Crear las bacterias con identificadores únicos
         self.bacterias = [Bacteria(self.grid, bacteria_id=i) for i in range(self.num_bacterias)]
 
+
+
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
         self.grid.spawn_initial_food(10)  # Generar las 10 comidas iniciales
         self.simulate_step()
 
     def simulate_step(self):
-        """Simular un paso de movimiento de las bacterias"""
-        # Mover todas las bacterias
-        alive_bacterias = [bacteria.move() for bacteria in self.bacterias]
+        """Simular un paso de movimiento de las bacterias."""
+        print("\n--- Inicio de ciclo ---")
+        # Actualizar el estado de todas las bacterias
+        for bacteria in self.bacterias:
+            bacteria.move()
 
-        # Si al menos una bacteria sigue viva, continúa la simulación
-        if any(alive_bacterias):
-            # Si ya hay un temporizador activo, cancelarlo
-            if self.simulation_timer is not None:
-                self.root.after_cancel(self.simulation_timer)
-            # Programar el siguiente paso
-            self.simulation_timer = self.root.after(1000, self.simulate_step)
-        else:
-            print(f"Simulación completada. Ciclos terminados.")
+        # Verificar cuántas bacterias están vivas
+        alive_bacterias = [bacteria for bacteria in self.bacterias if bacteria.is_alive]
+
+        if not alive_bacterias:  # Si no quedan bacterias vivas
+            print("Todas las bacterias murieron. Simulación finalizada.")
             self.end_simulation()
+            return
+
+        # Continuar con el siguiente ciclo
+        print(f"Bacterias vivas: {[b.bacteria_id for b in alive_bacterias]}")
+        self.simulation_timer = self.root.after(1000, self.simulate_step)
 
     def end_simulation(self):
         """Finaliza la simulación"""
         self.grid.canvas.delete('bacteria')
-        print("Fin de la simulación.")
+        print("Simulación finalizada. Todas las bacterias han muerto.")
 
     def restart_game(self):
         """Reiniciar el juego"""

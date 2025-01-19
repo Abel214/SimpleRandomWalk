@@ -12,6 +12,8 @@ class Bacteria:
         self.initial_move = True
         self.last_position = None
         self.bacteria_id = bacteria_id  # Aquí asignamos el bacteria_id
+        self.is_alive = True  # Estado inicial de la bacteria
+        self.has_eaten = False
         self.create_initial_point()
 
 
@@ -40,17 +42,15 @@ class Bacteria:
         self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Usa el ID para identificar cada bacteria
         padding = self.cell_size // 4
         # Aquí es donde se dibuja la bacteria en la cuadrícula, sin llamada recursiva
-        self.canvas.create_oval(
-            pixel_x + padding,
-            pixel_y + padding,
-            pixel_x + self.cell_size - padding,
-            pixel_y + self.cell_size - padding,
-            fill='green',
-            tag=f'bacteria_{self.bacteria_id}'  # Usamos el ID como tag único
-        )
-
-
-
+        if self.is_alive:
+            self.canvas.create_oval(
+                pixel_x + padding,
+                pixel_y + padding,
+                pixel_x + self.cell_size - padding,
+                pixel_y + self.cell_size - padding,
+                fill='green',
+                tag=f'bacteria_{self.bacteria_id}'  # Usamos el ID como tag único
+            )
 
     def get_valid_moves(self):
         """Determina los movimientos válidos basados en la posición actual"""
@@ -73,25 +73,14 @@ class Bacteria:
 
         return valid_moves
 
-    def draw_point(self):
-        """Dibuja la bacteria en la cuadrícula."""
-        pixel_x = self.grid_x * self.cell_size
-        pixel_y = self.grid_y * self.cell_size
-        self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Usa el ID para identificar cada bacteria
-        padding = self.cell_size // 4
-        # Aquí es donde se dibuja la bacteria en la cuadrícula, sin llamada recursiva
-        self.canvas.create_oval(
-            pixel_x + padding,
-            pixel_y + padding,
-            pixel_x + self.cell_size - padding,
-            pixel_y + self.cell_size - padding,
-            fill='green',
-            tag=f'bacteria_{self.bacteria_id}'  # Usamos el ID como tag único
-        )
-
     def move(self):
-        """Mueve la bacteria con restricciones de movimiento"""
-        if self.life_time <= 0:  # cuando la vida de la bacteria llega a 0 no se mueve
+        """Mueve la bacteria con restricciones de movimiento."""
+        if not self.is_alive:
+            print(f"Bacteria {self.bacteria_id}: Muerta")
+            return False  # No se mueve si está muerta
+
+        if self.life_time <= 0:  # Cuando la vida de la bacteria llega a 0 no se mueve
+            print(f"Bacteria {self.bacteria_id}: Vida agotada")
             return False
 
         # Obtener movimientos válidos según la situación
@@ -100,17 +89,19 @@ class Bacteria:
             # Verificar si el primer movimiento no lleva a la posición inicial
             for move in self.initial_directions:
                 new_x, new_y = self.grid_x + move[0], self.grid_y + move[1]
-                # Asegurarse de que no regrese a la posición inicial
-                if (new_x, new_y) != (self.grid_x, self.grid_y):
+                if (new_x, new_y) != (self.grid_x, self.grid_y):  # Evitar regresar a la posición inicial
                     valid_moves.append(move)
-
         else:
             valid_moves = self.get_valid_moves()
 
-        # Si no hay movimientos válidos, mantener la posición actual
+        # Si no hay movimientos válidos, pierde vida
         if not valid_moves:
             self.life_time -= 1
-            return True
+            print(f"Bacteria {self.bacteria_id}: Sin movimientos válidos, vida restante: {self.life_time}")
+            if self.life_time <= 0:
+                self.is_alive = False
+                print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+            return self.is_alive
 
         # Seleccionar un movimiento aleatorio entre los válidos
         move = choice(valid_moves)
@@ -122,15 +113,26 @@ class Bacteria:
         self.grid_x += move[0]
         self.grid_y += move[1]
 
+        # Verificar colisión con comida
         if self.check_food_collision():
-            return self.pass_to_next_cycle()
+            print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
+            self.life_time = 6  # Reiniciar vida después de comer
+            self.num_cycles += 1
+            return True  # Continúa viva para el siguiente ciclo
 
+        # Dibujar el punto en la nueva posición
         self.draw_point()
         self.initial_move = False
 
-        self.life_time -= 1  # Cada vez que se mueve, se debe restar uno de la vida
+        # Reducir vida y verificar si debe morir
+        self.life_time -= 1
+        if self.life_time <= 0:
+            self.is_alive = False
+            print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+        else:
+            print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
 
-        return True
+        return self.is_alive
 
     def check_food_collision(self):
         """Comprueba si la bacteria colisiona con comida"""
@@ -146,8 +148,13 @@ class Bacteria:
         """Si la bacteria come, pasa al siguiente ciclo. Si no, termina la simulación."""
         self.num_cycles += 1
         if self.num_cycles >= self.max_cycles:  # Si ya alcanzó el máximo de ciclos, termina
+            self.is_alive = False  # La bacteria muere
+            print(f"Bacteria {self.bacteria_id} ha muerto por alcanzar el límite de ciclos.")
+            return False  # No está viva
+        if not self.has_eaten:
+            self.is_alive = False  # Si no comió, muere
+            print(f"Bacteria {self.bacteria_id} ha muerto porque no comió.")
             return False
-        # Reiniciar el life_time para el siguiente ciclo
         self.life_time = 6
         self.initial_move = True
         self.last_position = None
