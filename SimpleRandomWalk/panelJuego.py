@@ -105,6 +105,10 @@ class PanelJuego:
         self.grid.create_grid()
         self.bacteria = Bacteria(self.grid, self.update_cycle)
 
+        # Restablecer el ciclo a 1
+        self.ciclo_actual = 1
+        self.ciclo_label.config(text=f"Ciclo: {self.ciclo_actual}")
+
         # Volver a generar comida inicial y reiniciar la simulación
         self.grid.spawn_food()
         self.start_simulation()
