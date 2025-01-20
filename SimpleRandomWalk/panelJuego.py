@@ -2,13 +2,16 @@ import tkinter as tk
 from SimpleRandomWalk.bacteria import Bacteria
 from grid import Grid
 
-
+MAX_CYCLES = 3
 class PanelJuego:
-    def __init__(self, root, num_bacterias=7):
+    def __init__(self, root, num_bacterias=2,num_food=10,steps_per_bacteria=5):
         self.root = root
         self.num_bacterias = num_bacterias
+        self.num_food = num_food
+        self.steps_per_bacteria = steps_per_bacteria
+        self.current_cycle = 1
         self.setup_ui()
-        self.grid.spawn_food()  # Generar comida inicial
+        self.grid.spawn_initial_food(self.num_food)  # Generar comida inicial
         self.simulation_timer = None
         self.start_simulation()
 
@@ -38,6 +41,14 @@ class PanelJuego:
             font=("Arial", 12),
             relief="raised"
         )
+        self.cycle_label = tk.Label(
+            self.control_panel,
+            text=f"Ciclo: {self.current_cycle}",
+            bg='gray10',
+            fg='white',
+            font=("Arial", 12)
+        )
+        self.cycle_label.pack(side="left", padx=10)
         self.repeat_button.pack(side="left", padx=10)
 
         # Panel para la grid
@@ -51,49 +62,114 @@ class PanelJuego:
         self.grid = Grid(self.game_frame)
 
         # Crear las bacterias con identificadores únicos
-        self.bacterias = [Bacteria(self.grid, bacteria_id=i) for i in range(self.num_bacterias)]
+        self.bacterias = [
+            Bacteria(self.grid, i, self.steps_per_bacteria)
+            for i in range(self.num_bacterias)
+        ]  # Crear bacterias con el número de pasos
 
 
 
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
-        self.grid.spawn_initial_food(10)  # Generar las 10 comidas iniciales
+        self.grid.spawn_initial_food(self.num_food)  # Generar las comidas iniciales
         self.simulate_step()
 
     def simulate_step(self):
         """Simular un paso de movimiento de las bacterias."""
-        print("\n--- Inicio de ciclo ---")
+        print(f"\n--- Ciclo {self.current_cycle} ---")
+        self.cycle_label.config(text=f"Ciclo: {self.current_cycle}")
         # Actualizar el estado de todas las bacterias
+        all_waiting = True
         for bacteria in self.bacterias:
-            bacteria.move()
+            if bacteria.is_alive:
+                if not bacteria.waiting_for_others:  # Si la bacteria no está esperando, que se mueva
+                    all_waiting = False
+                    if not bacteria.move():  # Si la bacteria muere durante el movimiento
+                        bacteria.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
+                else:
+                    print(f"Bacteria {bacteria.bacteria_id} está esperando a que termine el ciclo")
 
         # Verificar cuántas bacterias están vivas
         alive_bacterias = [bacteria for bacteria in self.bacterias if bacteria.is_alive]
 
-        if not alive_bacterias:  # Si no quedan bacterias vivas
-            print("Todas las bacterias murieron. Simulación finalizada.")
+        if not alive_bacterias:
+
             self.end_simulation()
             return
 
-        # Continuar con el siguiente ciclo
-        print(f"Bacterias vivas: {[b.bacteria_id for b in alive_bacterias]}")
-        self.simulation_timer = self.root.after(1000, self.simulate_step)
+        # Si todas las bacterias vivas están esperando, iniciar nuevo ciclo
+        if all_waiting:
+            for bacteria in alive_bacterias:
+                bacteria.waiting_for_others = False  # Resetear el estado de espera
+            self.start_new_cycle(alive_bacterias)
+        else:
+            # Continuar con el siguiente paso en el ciclo actual
+            print(f"Bacterias vivas en ciclo {self.current_cycle}: {[b.bacteria_id for b in alive_bacterias]}")
+            self.simulation_timer = self.root.after(1000, self.simulate_step)
+
+    def start_new_cycle(self, alive_bacterias):
+        """Iniciar un nuevo ciclo de la simulación sin regenerar comida ni cambiar las posiciones."""
+        if self.current_cycle >= MAX_CYCLES:
+            print("Se ha alcanzado el número máximo de ciclos. Simulación finalizada.")
+            self.end_simulation()
+            return
+
+        self.current_cycle += 1
+        print(f"\n=== Iniciando Ciclo {self.current_cycle} ===")
+
+        # Filtrar bacterias vivas para el siguiente ciclo
+        surviving_bacteria = []
+        for bacteria in alive_bacterias:
+            if bacteria.is_alive:
+                surviving_bacteria.append(bacteria)
+                print(
+                    f"Bacteria {bacteria.bacteria_id} inicia ciclo {self.current_cycle} en posición {bacteria.last_position}")
+            else:
+                print(f"Bacteria {bacteria.bacteria_id} no sobrevive al siguiente ciclo. Eliminada.")
+                # Corrección: usar self.grid.canvas en lugar de self.canvas
+                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
+                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
+
+        if surviving_bacteria:
+            # Pasar las bacterias sobrevivientes al siguiente ciclo
+            for bacteria in surviving_bacteria:
+                bacteria.grid_x, bacteria.grid_y = bacteria.last_position
+                bacteria.draw_point()  # Añadir esta línea para redibujar las bacterias sobrevivientes
+
+            print(f"Bacterias que pasan al ciclo {self.current_cycle}: {[b.bacteria_id for b in surviving_bacteria]}")
+            self.simulation_timer = self.root.after(1000, self.simulate_step)
+        else:
+            print("Ninguna bacteria sobrevivió al nuevo ciclo. Simulación finalizada.")
+            self.end_simulation()
 
     def end_simulation(self):
-        """Finaliza la simulación"""
+        """Finaliza la simulación y muestra cuántos ciclos faltaron."""
+        # Calcular cuántos ciclos faltaron
+        cycles_remaining = MAX_CYCLES - self.current_cycle
+
+        # Eliminar las bacterias del panel
         self.grid.canvas.delete('bacteria')
-        print("Simulación finalizada. Todas las bacterias han muerto.")
+
+        # Mostrar el mensaje de finalización
+        if cycles_remaining > 0:
+            print(f"Simulación finalizada. Todas las bacterias han muerto. Faltaron {cycles_remaining} ciclos.")
+        else:
+            print("Simulación finalizada. Todas las bacterias han muerto.")
 
     def restart_game(self):
         """Reiniciar el juego"""
         if self.simulation_timer is not None:
             self.root.after_cancel(self.simulation_timer)
+        self.current_cycle = 1
         # Limpiar la cuadrícula y reiniciar las bacterias
         self.grid.create_grid()
-        self.bacterias = [Bacteria(self.grid, bacteria_id=i) for i in range(self.num_bacterias)]
+        self.bacterias = [
+            Bacteria(self.grid, i, self.steps_per_bacteria)
+            for i in range(self.num_bacterias)
+        ]  # Crear bacterias con el número de pasos
 
         # Volver a generar comida inicial y reiniciar la simulación
-        self.grid.spawn_food()
+        self.grid.spawn_initial_food(self.num_food)  # Asegurarse de que se generen correctamente las comidas
         self.start_simulation()
 
 root = tk.Tk()
