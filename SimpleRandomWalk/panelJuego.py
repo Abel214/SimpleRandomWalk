@@ -4,7 +4,7 @@ from grid import Grid
 
 MAX_CYCLES = 3
 class PanelJuego:
-    def __init__(self, root, num_bacterias=2,num_food=10,steps_per_bacteria=5):
+    def __init__(self, root, num_bacterias=5,num_food=30,steps_per_bacteria=5):
         self.root = root
         self.num_bacterias = num_bacterias
         self.num_food = num_food
@@ -108,7 +108,7 @@ class PanelJuego:
             self.simulation_timer = self.root.after(1000, self.simulate_step)
 
     def start_new_cycle(self, alive_bacterias):
-        """Iniciar un nuevo ciclo de la simulación sin regenerar comida ni cambiar las posiciones."""
+        """Iniciar un nuevo ciclo de la simulación sin regenerar comida."""
         if self.current_cycle >= MAX_CYCLES:
             print("Se ha alcanzado el número máximo de ciclos. Simulación finalizada.")
             self.end_simulation()
@@ -120,22 +120,15 @@ class PanelJuego:
         # Filtrar bacterias vivas para el siguiente ciclo
         surviving_bacteria = []
         for bacteria in alive_bacterias:
-            if bacteria.is_alive:
+            if bacteria.pass_to_next_cycle():  # Usar el método actualizado que reubica la bacteria
                 surviving_bacteria.append(bacteria)
-                print(
-                    f"Bacteria {bacteria.bacteria_id} inicia ciclo {self.current_cycle} en posición {bacteria.last_position}")
+                print(f"Bacteria {bacteria.bacteria_id} inicia ciclo {self.current_cycle}")
             else:
                 print(f"Bacteria {bacteria.bacteria_id} no sobrevive al siguiente ciclo. Eliminada.")
-                # Corrección: usar self.grid.canvas en lugar de self.canvas
                 self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
                 self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
 
         if surviving_bacteria:
-            # Pasar las bacterias sobrevivientes al siguiente ciclo
-            for bacteria in surviving_bacteria:
-                bacteria.grid_x, bacteria.grid_y = bacteria.last_position
-                bacteria.draw_point()  # Añadir esta línea para redibujar las bacterias sobrevivientes
-
             print(f"Bacterias que pasan al ciclo {self.current_cycle}: {[b.bacteria_id for b in surviving_bacteria]}")
             self.simulation_timer = self.root.after(1000, self.simulate_step)
         else:

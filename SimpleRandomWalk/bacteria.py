@@ -167,7 +167,7 @@ class Bacteria:
             self.grid.canvas.delete('food')
             self.grid.redraw_food()
             self.has_eaten = True
-            self.last_position = current_pos
+            #self.last_position = current_pos
             return True
         return False
 
@@ -191,8 +191,8 @@ class Bacteria:
         self.initial_move = True
 
         # Si la bacteria comió, su última posición será donde comió
-        if self.last_position:
-            self.grid_x, self.grid_y = self.last_position
+
+        self.create_initial_point()
 
 
 
