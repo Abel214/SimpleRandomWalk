@@ -1,11 +1,10 @@
 import tkinter as tk
-from grid import Grid
-from tkinter import simpledialog
 from bacteria import Bacteria
+from grid import Grid
 
 MAX_CYCLES = 3
 class PanelJuego:
-    def __init__(self, root, num_bacterias=5,num_food=30,steps_per_bacteria=5):
+    def __init__(self, root, num_bacterias=5,num_food=10,steps_per_bacteria=5):
         self.root = root
         self.num_bacterias = num_bacterias
         self.num_food = num_food
@@ -33,18 +32,6 @@ class PanelJuego:
             bg='gray10'
         )
         self.control_panel.pack(fill='x', pady=(0, 10))
-        
-        # Etiqueta para mostrar el ciclo actual
-        self.ciclo_label = tk.Label(
-            self.control_panel,
-            text=f"Ciclo: {self.ciclo_actual}",
-            bg='gray10',
-            fg='white',
-            font=("Arial", 12)
-        )
-        self.ciclo_label.pack(side="left", padx=10)
-
-        # Botón de repetir
         self.repeat_button = tk.Button(
             self.control_panel,
             text="Repetir",
@@ -63,18 +50,6 @@ class PanelJuego:
         )
         self.cycle_label.pack(side="left", padx=10)
         self.repeat_button.pack(side="left", padx=10)
-        
-        # Botón de nuevos parámetros
-        self.new_params_button = tk.Button(
-            self.control_panel,
-            text="Nuevos Parámetros",
-            command=self.set_new_params,
-            bg='gray30',
-            fg='white',
-            font=("Arial", 12),
-            relief="raised"
-        )
-        self.new_params_button.pack(side="left", padx=10)
 
         # Panel para la grid
         self.game_frame = tk.Frame(
@@ -85,7 +60,6 @@ class PanelJuego:
 
         # Crear la grid dentro del panel de juego
         self.grid = Grid(self.game_frame)
-        #self.bacteria = Bacteria(self.grid, self.update_cycle)
 
         # Crear las bacterias con identificadores únicos
         self.bacterias = [
@@ -95,17 +69,10 @@ class PanelJuego:
 
 
 
-
-    def update_cycle(self, num_cycles):
-        """Método para actualizar el ciclo en la interfaz"""
-        self.ciclo_actual = num_cycles + 1
-        self.ciclo_label.config(text=f"Ciclo: {self.ciclo_actual}")
-
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
         self.grid.spawn_initial_food(self.num_food)  # Generar las comidas iniciales
         self.simulate_step()
-        
 
     def simulate_step(self):
         """Simular un paso de movimiento de las bacterias."""
@@ -194,30 +161,10 @@ class PanelJuego:
             for i in range(self.num_bacterias)
         ]  # Crear bacterias con el número de pasos
 
-
-        # Restablecer el ciclo a 1
-        self.ciclo_actual = 1
-        self.ciclo_label.config(text=f"Ciclo: {self.ciclo_actual}")
-
         # Volver a generar comida inicial y reiniciar la simulación
         self.grid.spawn_initial_food(self.num_food)  # Asegurarse de que se generen correctamente las comidas
         self.start_simulation()
 
-    def set_new_params(self):
-        """Solicitar nuevos parámetros y reiniciar la simulación"""
-        num_food = simpledialog.askinteger("Configuración", "Ingrese el número de comidas:", minvalue=1, maxvalue=100)
-        life_time = simpledialog.askinteger("Configuración", "Ingrese el tiempo de vida de las bacterias:", minvalue=1, maxvalue=100)
-        
-        if num_food and life_time:
-            self.num_food = num_food
-            self.life_time = life_time
-            self.restart_game()
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    num_food = simpledialog.askinteger("Configuración", "Ingrese el número de comidas:", minvalue=1, maxvalue=100)
-    life_time = simpledialog.askinteger("Configuración", "Ingrese el tiempo de vida de las bacterias:", minvalue=1, maxvalue=100)
-    
-    if num_food and life_time:
-        app = PanelJuego(root, num_bacterias=3, num_food=num_food, life_time=life_time)
-        root.mainloop()
+root = tk.Tk()
+app = PanelJuego(root)
+root.mainloop()

@@ -18,7 +18,6 @@ class Bacteria:
         self.has_eaten = False
         self.waiting_for_others = False
         self.create_initial_point()
-        self.update_cycle_callback = update_cycle_callback  # Callback para actualizar el ciclo
 
 
     def create_initial_point(self):
@@ -157,9 +156,6 @@ class Bacteria:
             print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
         else:
             print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
-
-        # Actualizar el ciclo en la interfaz
-        self.update_cycle_callback(self.num_cycles)
 
         return self.is_alive
 
