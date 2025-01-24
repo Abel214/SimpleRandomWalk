@@ -200,5 +200,5 @@ position_right = 500
 
 root.geometry(f"700x600+{position_right}+{position_top}")
 # Iniciar la aplicación
-app = PanelJuego(root)
+app = PanelJuego(root,1)
 root.mainloop()
