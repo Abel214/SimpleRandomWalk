@@ -2,10 +2,10 @@ import tkinter as tk
 from bacteria import Bacteria
 from grid import Grid
 
-MAX_CYCLES = 3
+MAX_CYCLES = 6
 
 class PanelJuego:
-    def __init__(self, root, num_bacterias=5, num_food=10, steps_per_bacteria=5):
+    def __init__(self, root, num_bacterias=2, num_food=50, steps_per_bacteria=6):
         self.root = root
         self.num_bacterias = num_bacterias
         self.num_food = num_food

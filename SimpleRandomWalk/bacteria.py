@@ -1,24 +1,25 @@
 from random import choice
-
 class Bacteria:
-    def __init__(self, grid, bacteria_id,steps_per_bacteria):
+    def __init__(self, grid, bacteria_id, steps_per_bacteria, speed=0):
         self.grid = grid
         self.canvas = grid.canvas
         self.cell_size = grid.cell_size
         self.grid_size = grid.size
-        self.life_time = steps_per_bacteria +1
+        self.life_time = steps_per_bacteria + 1
         self.steps_per_bacteria = steps_per_bacteria
         self.num_cycles = 0
-        self.max_cycles = 3
+        self.max_cycles = 6
         self.initial_move = True
         self.last_position = None
-        self.bacteria_id = bacteria_id  # Aquí asignamos el bacteria_id
-        self.is_alive = True  # Estado inicial de la bacteria
+        self.bacteria_id = bacteria_id
+        self.is_alive = True
         self.last_position = (0, 0)
         self.has_eaten = False
+        self.current_speed = speed
+        self.eaten_count = 0
+        self.speed_increment_pending = False
         self.waiting_for_others = False
         self.create_initial_point()
-
 
     def create_initial_point(self):
         """Crea la bacteria en una de las cuatro esquinas y define su dirección inicial"""
@@ -95,20 +96,36 @@ class Bacteria:
     def move(self):
         """Mueve la bacteria con prioridad hacia la comida detectada por radar."""
         if not self.is_alive:
-            self.canvas.delete()
-            print(f"Bacteria {self.bacteria_id}: Muerta")
-            return False  # No se mueve si está muerta
+            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}')
+            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_text')
+            return False
 
-        if self.life_time <= 0:  # Cuando la vida de la bacteria llega a 0 no se mueve
+        if self.life_time <= 0:
             print(f"Bacteria {self.bacteria_id}: Vida agotada")
             self.is_alive = False
-            # Eliminar la bacteria del canvas cuando se agota su vida
-            self.canvas.delete()
             return False
 
         if self.has_eaten and self.life_time == 1:
-            self.waiting_for_others = True  # La bacteria ya no espera
+            self.waiting_for_others = True
             return False
+
+        # Obtain valid moves
+        if self.initial_move:
+            valid_moves = []
+            for move in self.initial_directions:
+                new_x, new_y = self.grid_x + move[0], self.grid_y + move[1]
+                if (new_x, new_y) != (self.grid_x, self.grid_y):
+                    valid_moves.append(move)
+        else:
+            valid_moves = self.get_valid_moves()
+
+        if not valid_moves:
+            self.life_time -= 1
+            print(f"Bacteria {self.bacteria_id}: Sin movimientos válidos, vida restante: {self.life_time}")
+            if self.life_time <= 0:
+                self.is_alive = False
+                print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+            return self.is_alive
 
         # Detectar comida dentro del radio de 2 celdas
         food_positions = self.grid.get_food_within_radius(self.grid_x, self.grid_y, radius=2)
@@ -137,45 +154,45 @@ class Bacteria:
                     self.canvas.delete()
                 return self.is_alive
 
-            move = choice(valid_moves)
+        # Si no hay movimientos válidos, pierde vida
+        if not valid_moves:
+            self.life_time -= 1
+            print(f"Bacteria {self.bacteria_id}: Sin movimientos válidos, vida restante: {self.life_time}")
+            if self.life_time <= 0:
+                self.is_alive = False
+                print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+                self.canvas.delete()
+            return self.is_alive
 
-        # Guardar la posición actual antes de mover
+        move = choice(valid_moves)
         self.last_position = (self.grid_x, self.grid_y)
-
-        # Realizar el movimiento
         self.grid_x += move[0]
         self.grid_y += move[1]
 
-        # Actualizar la posición de la bacteria en el canvas
-        self.grid.update_bacteria_position(self.bacteria_id, self.grid_x, self.grid_y)
-
-        # Verificar si hay comida en la nueva posición
-        if self.grid.consume_food(self.grid_x, self.grid_y):
-            print(f"Bacteria {self.bacteria_id}: Comió en posición ({self.grid_x}, {self.grid_y})")
-            self.has_eaten = True
-            self.life_time += 3  # Incrementar la vida de la bacteria por comer
-        else:
-            self.life_time -= 1  # Reducir la vida si no come
-            print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
-
-            return self.is_alive
-
-        # Verificar colisión con comida
+        # Check for food collision
         if self.check_food_collision():
             print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
             self.has_eaten = True
+            self.eaten_count += 1
+            # Update speed mechanism
+            if self.eaten_count >= 2 and self.current_speed < 2:
+                self.speed_increment_pending = True
+                print(f"Bacteria {self.bacteria_id}: Velocidad pendiente para el próximo ciclo")
 
-            # Verificar si la vida es 1 después de comer, y detener si es así
-            if self.life_time == 1:
-                print(f"Bacteria {self.bacteria_id}: Se detiene al llegar a 1 paso después de comer.")
-                self.waiting_for_others = False  # Cambiar el estado de espera a False
-                return False  # Detenerse porque la vida está en 1
+        # Move multiple steps based on current speed
+        for _ in range(self.current_speed):
+            self.grid_x += move[0]
+            self.grid_y += move[1]
+            if self.check_food_collision():
+                print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
+                self.has_eaten = True
+                self.eaten_count += 1
 
-        # Dibujar el punto en la nueva posición
+        # Draw the point in the new position
         self.draw_point()
         self.initial_move = False
 
-        # Reducir vida y verificar si debe morir
+        # Reduce life
         self.life_time -= 1
         if self.life_time <= 0:
             self.is_alive = False
@@ -185,6 +202,45 @@ class Bacteria:
 
         return self.is_alive
 
+    def pass_to_next_cycle(self):
+        self.num_cycles += 1
+        print(f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
+
+        # Si comió dos comidas, incrementar velocidad
+        if self.eaten_count >= 2:
+            self.current_speed += 1
+            print(f"Bacteria {self.bacteria_id}: Velocidad aumentada a {self.current_speed}")
+
+        # Resetear el contador de comidas
+        self.eaten_count = 0
+
+        if self.num_cycles >= self.max_cycles:
+            self.is_alive = False
+            print(f"Bacteria {self.bacteria_id}: Muerta por alcanzar el límite de ciclos.")
+            return False
+
+        # Modificar la condición de supervivencia
+        # Si ha comido al menos una vez en el ciclo anterior, sigue viva
+        if not self.has_eaten:
+            self.is_alive = False
+            print(f"Bacteria {self.bacteria_id}: Muerta porque no comió.")
+            return False
+
+        # Reset life and parameters for the new cycle
+        self.life_time = self.steps_per_bacteria + 1
+        self.has_eaten = False
+        self.initial_move = True
+
+        self.create_initial_point()
+
+        return True
+
+    def reset_for_next_cycle(self):
+        """Reset parameters at the start of a new cycle."""
+        self.eaten_count = 0
+        self.speed_increment_pending = False
+        self.has_eaten = False
+
     def check_food_collision(self):
         """Comprueba si la bacteria colisiona con comida"""
         current_pos = (self.grid_x, self.grid_y)
@@ -193,32 +249,8 @@ class Bacteria:
             self.grid.canvas.delete('food')
             self.grid.redraw_food()
             self.has_eaten = True
-            #self.last_position = current_pos
+            # self.last_position = current_pos
             return True
         return False
 
-    def pass_to_next_cycle(self):
-        self.num_cycles += 1
-        print(f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
-
-        if self.num_cycles >= self.max_cycles:
-            self.is_alive = False
-            print(f"Bacteria {self.bacteria_id}: Muerta por alcanzar el límite de ciclos.")
-            return False
-
-        if not self.has_eaten:
-            self.is_alive = False
-            print(f"Bacteria {self.bacteria_id}: Muerta porque no comió.")
-            return False
-
-        # Reiniciar los pasos y el estado para el nuevo ciclo
-        self.life_time = self.steps_per_bacteria + 1
-        self.has_eaten = False
-        self.initial_move = True
-
-        # Si la bacteria comió, su última posición será donde comió
-
-        self.create_initial_point()
-
-        return True
 
