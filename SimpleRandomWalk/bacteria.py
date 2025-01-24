@@ -111,7 +111,7 @@ class Bacteria:
             return False
 
         # Detectar comida dentro del radio de 2 celdas
-        food_positions = self.grid.get_food_within_radius(self.grid_x, self.grid_y, radius=1)
+        food_positions = self.grid.get_food_within_radius(self.grid_x, self.grid_y, radius=2)
 
         if food_positions:
             # Si hay comida en el radio, moverse hacia la más cercana
