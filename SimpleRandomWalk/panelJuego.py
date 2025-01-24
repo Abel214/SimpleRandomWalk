@@ -3,8 +3,9 @@ from bacteria import Bacteria
 from grid import Grid
 
 MAX_CYCLES = 3
+
 class PanelJuego:
-    def __init__(self, root, num_bacterias=5,num_food=10,steps_per_bacteria=5):
+    def __init__(self, root, num_bacterias=5, num_food=10, steps_per_bacteria=5):
         self.root = root
         self.num_bacterias = num_bacterias
         self.num_food = num_food
@@ -67,8 +68,6 @@ class PanelJuego:
             for i in range(self.num_bacterias)
         ]  # Crear bacterias con el número de pasos
 
-
-
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
         self.grid.spawn_initial_food(self.num_food)  # Generar las comidas iniciales
@@ -78,6 +77,13 @@ class PanelJuego:
         """Simular un paso de movimiento de las bacterias."""
         print(f"\n--- Ciclo {self.current_cycle} ---")
         self.cycle_label.config(text=f"Ciclo: {self.current_cycle}")
+
+        # Eliminar bacterias muertas del panel
+        for bacteria in self.bacterias:
+            if not bacteria.is_alive:
+                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
+                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
+
         # Actualizar el estado de todas las bacterias
         all_waiting = True
         for bacteria in self.bacterias:
@@ -93,7 +99,6 @@ class PanelJuego:
         alive_bacterias = [bacteria for bacteria in self.bacterias if bacteria.is_alive]
 
         if not alive_bacterias:
-
             self.end_simulation()
             return
 
@@ -120,13 +125,15 @@ class PanelJuego:
         # Filtrar bacterias vivas para el siguiente ciclo
         surviving_bacteria = []
         for bacteria in alive_bacterias:
-            if bacteria.pass_to_next_cycle():  # Usar el método actualizado que reubica la bacteria
-                surviving_bacteria.append(bacteria)
-                print(f"Bacteria {bacteria.bacteria_id} inicia ciclo {self.current_cycle}")
-            else:
-                print(f"Bacteria {bacteria.bacteria_id} no sobrevive al siguiente ciclo. Eliminada.")
-                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
-                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
+            # Si la bacteria tiene vida 1 y ha comido, no se elimina
+            if bacteria.life_time > 1 or (bacteria.life_time == 1 and bacteria.has_eaten):
+                if bacteria.pass_to_next_cycle():  # Verifica si la bacteria puede pasar al siguiente ciclo
+                    surviving_bacteria.append(bacteria)
+                    print(f"Bacteria {bacteria.bacteria_id} inicia ciclo {self.current_cycle}")
+                else:
+                    print(f"Bacteria {bacteria.bacteria_id} no sobrevive al siguiente ciclo. Eliminada.")
+                    self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
+                    self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
 
         if surviving_bacteria:
             print(f"Bacterias que pasan al ciclo {self.current_cycle}: {[b.bacteria_id for b in surviving_bacteria]}")
@@ -166,5 +173,15 @@ class PanelJuego:
         self.start_simulation()
 
 root = tk.Tk()
+root.title("Simple Random Walk")
+# Establecer el tamaño de la ventana
+root.geometry()
+
+# Centrar la ventana en la pantalla
+position_top = 50
+position_right = 500
+
+root.geometry(f"700x600+{position_right}+{position_top}")
+# Iniciar la aplicación
 app = PanelJuego(root)
 root.mainloop()

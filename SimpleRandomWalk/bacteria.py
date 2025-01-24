@@ -105,7 +105,9 @@ class Bacteria:
             # Eliminar la bacteria del canvas cuando se agota su vida
             self.canvas.delete()
             return False
-
+        if self.has_eaten and self.life_time == 1:
+            self.waiting_for_others = True  # La bacteria ya no espera
+            return False
         # Obtener movimientos válidos según la situación
         if self.initial_move:
             valid_moves = []
@@ -140,10 +142,13 @@ class Bacteria:
         # Verificar colisión con comida
         if self.check_food_collision():
             print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
-            self.life_time = self.steps_per_bacteria+1
             self.has_eaten = True
-            self.waiting_for_others = True  # Se queda esperando
-            return True
+
+            # Verificar si la vida es 1 después de comer, y detener si es así
+            if self.life_time == 1:
+                print(f"Bacteria {self.bacteria_id}: Se detiene al llegar a 1 paso después de comer.")
+                self.waiting_for_others = False  # Cambiar el estado de espera a False
+                return False  # Detenerse porque la vida está en 1
 
         # Dibujar el punto en la nueva posición
         self.draw_point()
@@ -193,8 +198,6 @@ class Bacteria:
         # Si la bacteria comió, su última posición será donde comió
 
         self.create_initial_point()
-
-
 
         return True
 
