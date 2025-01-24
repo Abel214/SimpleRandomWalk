@@ -93,7 +93,7 @@ class Bacteria:
         return valid_moves
 
     def move(self):
-        """Mueve la bacteria con restricciones de movimiento."""
+        """Mueve la bacteria con prioridad hacia la comida detectada por radar."""
         if not self.is_alive:
             self.canvas.delete()
             print(f"Bacteria {self.bacteria_id}: Muerta")
@@ -105,32 +105,39 @@ class Bacteria:
             # Eliminar la bacteria del canvas cuando se agota su vida
             self.canvas.delete()
             return False
+
         if self.has_eaten and self.life_time == 1:
             self.waiting_for_others = True  # La bacteria ya no espera
             return False
-        # Obtener movimientos válidos según la situación
-        if self.initial_move:
-            valid_moves = []
-            # Verificar si el primer movimiento no lleva a la posición inicial
-            for move in self.initial_directions:
-                new_x, new_y = self.grid_x + move[0], self.grid_y + move[1]
-                if (new_x, new_y) != (self.grid_x, self.grid_y):  # Evitar regresar a la posición inicial
-                    valid_moves.append(move)
+
+        # Detectar comida dentro del radio de 2 celdas
+        food_positions = self.grid.get_food_within_radius(self.grid_x, self.grid_y, radius=2)
+
+        if food_positions:
+            # Si hay comida en el radio, moverse hacia la más cercana
+            closest_food = min(
+                food_positions, 
+                key=lambda food: abs(food[0] - self.grid_x) + abs(food[1] - self.grid_y)
+            )
+            dx = closest_food[0] - self.grid_x
+            dy = closest_food[1] - self.grid_y
+            move = (int(dx / abs(dx)) if dx != 0 else 0, int(dy / abs(dy)) if dy != 0 else 0)
+
+            print(f"Bacteria {self.bacteria_id}: Moviéndose hacia la comida en {closest_food}")
         else:
+            # Si no hay comida en el radio, realizar un movimiento aleatorio
+            print(f"Bacteria {self.bacteria_id}: No se detectó comida en el radar. Movimiento aleatorio.")
             valid_moves = self.get_valid_moves()
+            if not valid_moves:  # Si no hay movimientos válidos, pierde vida
+                self.life_time -= 1
+                print(f"Bacteria {self.bacteria_id}: Sin movimientos válidos, vida restante: {self.life_time}")
+                if self.life_time <= 0:
+                    self.is_alive = False
+                    print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+                    self.canvas.delete()
+                return self.is_alive
 
-        # Si no hay movimientos válidos, pierde vida
-        if not valid_moves:
-            self.life_time -= 1
-            print(f"Bacteria {self.bacteria_id}: Sin movimientos válidos, vida restante: {self.life_time}")
-            if self.life_time <= 0:
-                self.is_alive = False
-                print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
-                self.canvas.delete()
-            return self.is_alive
-
-        # Seleccionar un movimiento aleatorio entre los válidos
-        move = choice(valid_moves)
+            move = choice(valid_moves)
 
         # Guardar la posición actual antes de mover
         self.last_position = (self.grid_x, self.grid_y)
@@ -138,6 +145,20 @@ class Bacteria:
         # Realizar el movimiento
         self.grid_x += move[0]
         self.grid_y += move[1]
+
+        # Actualizar la posición de la bacteria en el canvas
+        self.grid.update_bacteria_position(self.bacteria_id, self.grid_x, self.grid_y)
+
+        # Verificar si hay comida en la nueva posición
+        if self.grid.consume_food(self.grid_x, self.grid_y):
+            print(f"Bacteria {self.bacteria_id}: Comió en posición ({self.grid_x}, {self.grid_y})")
+            self.has_eaten = True
+            self.life_time += 3  # Incrementar la vida de la bacteria por comer
+        else:
+            self.life_time -= 1  # Reducir la vida si no come
+            print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
+
+            return self.is_alive
 
         # Verificar colisión con comida
         if self.check_food_collision():
