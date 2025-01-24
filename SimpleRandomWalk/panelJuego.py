@@ -11,6 +11,7 @@ class PanelJuego:
         self.num_food = num_food
         self.steps_per_bacteria = steps_per_bacteria
         self.current_cycle = 1
+        self.message_label = None  # Referencia para el Label del mensaje
         self.setup_ui()
         self.grid.spawn_initial_food(self.num_food)  # Generar comida inicial
         self.simulation_timer = None
@@ -150,26 +151,42 @@ class PanelJuego:
         # Eliminar las bacterias del panel
         self.grid.canvas.delete('bacteria')
 
-        # Mostrar el mensaje de finalización
+        # Determinar el mensaje de finalización
         if cycles_remaining > 0:
-            print(f"Simulación finalizada. Todas las bacterias han muerto. Faltaron {cycles_remaining} ciclos.")
+            message = f"Simulación finalizada.\n Todas las bacterias han muerto.\n Faltaron {cycles_remaining} ciclos."
         else:
-            print("Simulación finalizada. Todas las bacterias han muerto.")
+            message = "Simulación finalizada.\n Todas las bacterias han muerto."
+
+        # Eliminar el mensaje anterior si existe
+        if self.message_label is not None:
+            self.message_label.destroy()
+
+        # Crear un nuevo widget Label para mostrar el mensaje
+        self.message_label = tk.Label(self.grid.canvas, text=message, font=("Arial", 14), fg="red")
+        self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
 
     def restart_game(self):
         """Reiniciar el juego"""
         if self.simulation_timer is not None:
             self.root.after_cancel(self.simulation_timer)
+
+        # Reiniciar ciclo actual
         self.current_cycle = 1
-        # Limpiar la cuadrícula y reiniciar las bacterias
+
+        # Limpiar la cuadrícula y eliminar el mensaje
+        if self.message_label is not None:
+            self.message_label.destroy()  # Eliminar el mensaje de finalización
+            self.message_label = None
+
+        # Reiniciar la cuadrícula y las bacterias
         self.grid.create_grid()
         self.bacterias = [
             Bacteria(self.grid, i, self.steps_per_bacteria)
             for i in range(self.num_bacterias)
-        ]  # Crear bacterias con el número de pasos
+        ]
 
         # Volver a generar comida inicial y reiniciar la simulación
-        self.grid.spawn_initial_food(self.num_food)  # Asegurarse de que se generen correctamente las comidas
+        self.grid.spawn_initial_food(self.num_food)
         self.start_simulation()
 
 root = tk.Tk()
