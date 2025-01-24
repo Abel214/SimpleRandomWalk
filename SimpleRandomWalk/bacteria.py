@@ -116,6 +116,16 @@ class Bacteria:
                 new_x, new_y = self.grid_x + move[0], self.grid_y + move[1]
                 if (new_x, new_y) != (self.grid_x, self.grid_y):
                     valid_moves.append(move)
+        else:
+            valid_moves = self.get_valid_moves()
+
+        if not valid_moves:
+            self.life_time -= 1
+            print(f"Bacteria {self.bacteria_id}: Sin movimientos válidos, vida restante: {self.life_time}")
+            if self.life_time <= 0:
+                self.is_alive = False
+                print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+            return self.is_alive
 
         # Detectar comida dentro del radio de 2 celdas
         food_positions = self.grid.get_food_within_radius(self.grid_x, self.grid_y, radius=2)
