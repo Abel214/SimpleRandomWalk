@@ -166,5 +166,24 @@ class PanelJuego:
         self.start_simulation()
 
 root = tk.Tk()
+
+# Establecer el tamaño de la ventana
+root.geometry("500x500")
+
+# Centrar la ventana en la pantalla
+window_width = 500
+window_height = 500
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+position_top = int(screen_height / 2 - window_height / 2)
+position_right = int(screen_width / 2 - window_width / 2)
+
+root.geometry(f"500x500+{position_right}+{position_top}")
+
+# Cambiar el título de la ventana
+root.title("Simple Random Walk")
+
+# Iniciar la aplicación
 app = PanelJuego(root)
 root.mainloop()
