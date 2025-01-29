@@ -1,4 +1,7 @@
 from random import choice
+import tkinter as tk
+from tkinter import messagebox
+
 class Bacteria:
     def __init__(self, grid, bacteria_id, steps_per_bacteria, speed=0):
         self.grid = grid
@@ -205,11 +208,21 @@ class Bacteria:
     def pass_to_next_cycle(self):
         self.num_cycles += 1
         print(f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
+        root = tk.Tk()
+        root.withdraw()  # Oculta la ventana principal
+        messagebox.showinfo("Bacterias Sobrevivientes", f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
 
         # Si comió dos comidas, incrementar velocidad
         if self.eaten_count >= 2:
             self.current_speed += 1
             print(f"Bacteria {self.bacteria_id}: Velocidad aumentada a {self.current_speed}")
+            # Mostrar alerta al usuario
+            root = tk.Tk()
+            root.withdraw()  # Oculta la ventana principal
+            messagebox.showinfo("Incremento de Velocidad", 
+                                f"La bacteria {self.bacteria_id} ha incrementado su velocidad a {self.current_speed}.")
+
+        
 
         # Resetear el contador de comidas
         self.eaten_count = 0
