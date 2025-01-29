@@ -6,7 +6,7 @@ import random
 WIDTH, HEIGHT = 480, 480  # Dimensiones del área de simulación
 STEP = 30  # Tamaño de cada paso de la partícula
 TV_INITIAL = 5  # Tiempo de vida inicial de la partícula
-FOOD_COUNT = 3  # Número de unidades de comida por ciclo
+FOOD_COUNT = 10  # Número de unidades de comida por ciclo
 
 class ParticleSimulation:
     def __init__(self, root):
@@ -31,12 +31,11 @@ class ParticleSimulation:
         self.info_label.grid(row=0, column=0, padx=10, pady=10)  # grid para la etiqueta
 
         self.start_button = Button(self.frame, text="Iniciar", bg='aqua', command=self.start_game)
-        self.start_button.grid(row=0, column=1, padx=20)  # grid para el botón
+        self.start_button.grid(row=0, column=1, padx=10)  # grid para el botón
 
         self.exit_button = Button(self.frame, text="Salir", bg='orange', command=self.salir)
-        self.exit_button.grid(row=0, column=2, padx=20)  # grid para el botón
+        self.exit_button.grid(row=0, column=2, padx=10)  # grid para el botón
 
-        
 
     def setup_game(self):
     # Configuración inicial de la simulación

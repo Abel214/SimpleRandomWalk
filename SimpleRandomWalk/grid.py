@@ -81,5 +81,68 @@ class Grid:
             fill='red',
             tag='food'
         )
+    
+    # Busca posiciones de comida dentro de un radio específico
+    def get_food_within_radius(self, x, y, radius):
+        """Devuelve una lista de posiciones de comida dentro del radio especificado."""
+        food_positions = []
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                nx, ny = x + dx, y + dy
+                # Verificar si la posición está dentro de los límites y contiene comida
+                if 0 <= nx < self.size and 0 <= ny < self.size and (nx, ny) in self.food_positions:
+                    food_positions.append((nx, ny))
+        return food_positions
+
+    def consume_food(self, x, y):
+        """
+        Consume comida en la posición (x, y) si existe.
+        Devuelve True si había comida y se consumió, de lo contrario, False.
+        """
+        position = (x, y)
+        if position in self.food_positions:
+            self.food_positions.remove(position)
+            self.redraw_food()  # Actualizar el canvas para eliminar la comida consumida
+            return True
+        return False
+
+    def update_bacteria_position(self, bacteria_id, new_x, new_y):
+        """
+        Actualiza la posición de una bacteria en el canvas.
+        Dibuja un círculo (bacteria) y su identificador (texto) en la nueva posición.
+        """
+        # Etiqueta única para identificar la bacteria en el canvas
+        tag = f'bacteria_{bacteria_id}'
+        
+        # Elimina la representación previa de la bacteria y su texto
+        self.canvas.delete(tag)
+        self.canvas.delete(f'bacteria_{bacteria_id}_text')
+        
+        # Calcular coordenadas para dibujar la bacteria
+        pixel_x = new_x * self.cell_size
+        pixel_y = new_y * self.cell_size
+        padding = self.cell_size // 4  # Ajuste del relleno según la celda
+        
+        # Dibujar la nueva posición de la bacteria
+        self.canvas.create_oval(
+            pixel_x + padding,
+            pixel_y + padding,
+            pixel_x + self.cell_size - padding,
+            pixel_y + self.cell_size - padding,
+            fill='green',
+            tag=tag  # Usamos el ID como tag único
+        )
+        
+        # Dibujar el identificador de la bacteria (el número) encima del círculo
+        self.canvas.create_text(
+            pixel_x + self.cell_size // 2,  # Centrado en el medio de la celda
+            pixel_y + self.cell_size // 2,  # Centrado en el medio de la celda
+            text=str(bacteria_id),  # El número identificador
+            fill='white',  # Color del texto
+            font=('Arial', 8, 'bold'),  # Estilo y tamaño de la fuente
+            tag=f'bacteria_{bacteria_id}_text'  # Etiqueta única para el texto
+        )
+
+
 
 
