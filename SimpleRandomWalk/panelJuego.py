@@ -5,7 +5,7 @@ from grid import Grid
 MAX_CYCLES = 6
 
 class PanelJuego:
-    def __init__(self, root, num_bacterias=2, num_food=50, steps_per_bacteria=6):
+    def __init__(self, root,Intermedio, num_bacterias=0, num_food=0, steps_per_bacteria=0):
         self.root = root
         self.num_bacterias = num_bacterias
         self.num_food = num_food
@@ -16,7 +16,7 @@ class PanelJuego:
         self.grid.spawn_initial_food(self.num_food)  # Generar comida inicial
         self.simulation_timer = None
         self.start_simulation()
-
+        self.Intermedio=Intermedio
     def setup_ui(self):
         """Configurar la interfaz del juego"""
         # Panel principal
@@ -34,6 +34,15 @@ class PanelJuego:
             bg='gray10'
         )
         self.control_panel.pack(fill='x', pady=(0, 10))
+        self.return_button = tk.Button(
+            self.control_panel,
+            text="Volver a Biomas",
+            command=self.regresar_ventana_intermedia,
+            bg='gray30',
+            fg='white',
+            font=("Arial", 12),
+            relief="raised"
+        )
         self.repeat_button = tk.Button(
             self.control_panel,
             text="Repetir",
@@ -50,9 +59,10 @@ class PanelJuego:
             fg='white',
             font=("Arial", 12)
         )
+
         self.cycle_label.pack(side="left", padx=10)
         self.repeat_button.pack(side="left", padx=10)
-
+        self.return_button.pack(side="left", padx=10)
         # Panel para la grid
         self.game_frame = tk.Frame(
             self.panel,
@@ -189,16 +199,48 @@ class PanelJuego:
         self.grid.spawn_initial_food(self.num_food)
         self.start_simulation()
 
-root = tk.Tk()
-root.title("Simple Random Walk")
-# Establecer el tamaño de la ventana
-root.geometry()
+    def abrir_ventana(self):
+        """Abre una nueva ventana para ejecutar la clase desde otra clase."""
+        # Crear nueva ventana
+        ventana_juego = tk.Toplevel(self.root)
+        ventana_juego.title("Simulación de Bacterias")
+
+        # Obtener dimensiones de la pantalla
+        screen_width = ventana_juego.winfo_screenwidth()
+        screen_height = ventana_juego.winfo_screenheight()
+
+        # Establecer dimensiones de la ventana
+        window_width = 700
+        window_height = 600
+
+        # Calcular posición para centrar la ventana
+        position_x = int((screen_width / 2) - (window_width / 2))
+        position_y = 100
+
+        # Establecer geometría de la ventana
+        ventana_juego.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
+
+        # Crear una nueva instancia de PanelJuego en la nueva ventana
+        self.root = ventana_juego  # Actualizar la referencia a la ventana raíz
+        self.setup_ui()  # Configurar la interfaz en la nueva ventana
+        self.grid.spawn_initial_food(self.num_food)
+        self.start_simulation()
+
+    def regresar_ventana_intermedia(self):
+        """Regresar a la ventana intermedia"""
+        from Intermedio import Intermedio
+        self.root.destroy()  # Cerrar ventana del juego
+        self.Intermedio.deiconify()
+    #Por si se desea probar por separado esta ventana; recordar pasar parametros
+#root = tk.Tk()
+#root.title("Simple Random Walk")
+#Establecer el tamaño de la ventana
+#root.geometry()
 
 # Centrar la ventana en la pantalla
-position_top = 50
-position_right = 500
+#position_top = 50
+#position_right = 500
 
-root.geometry(f"700x600+{position_right}+{position_top}")
+#root.geometry(f"700x600+{position_right}+{position_top}")
 # Iniciar la aplicación
-app = PanelJuego(root)
-root.mainloop()
+#root.mainloop()

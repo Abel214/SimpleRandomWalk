@@ -247,16 +247,4 @@ class PanelJuego:
         # Initialize the PanelJuego in the new window
         PanelJuego(new_window, self.num_bacterias, self.num_food, self.steps_per_bacteria)
         
-root = tk.Tk()
-root.title("Simple Random Walk")
-# Establecer el tamaño de la ventana
-root.geometry()
 
-# Centrar la ventana en la pantalla
-position_top = 50
-position_right = 500
-
-root.geometry(f"700x600+{position_right}+{position_top}")
-# Iniciar la aplicación
-app = PanelJuego(root)
-root.mainloop()

@@ -3,6 +3,8 @@ from tkinter import *
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from PIL import Image, ImageTk
+
+from SimpleRandomWalk.Intermedio import Intermedio
 from panelTest import PanelJuego
 
 
@@ -77,9 +79,7 @@ def acerca_de():
 
 def ventana_Juego():
     ventana_principal.withdraw()
-
-    panelTest = PanelJuego(ventana_principal)  
-    panelTest.abrir_ventana()
+    Intermedio(ventana_principal)
 
 
 # Menú
