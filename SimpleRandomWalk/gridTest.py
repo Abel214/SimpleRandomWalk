@@ -1,0 +1,170 @@
+import tkinter as tk
+from random import randint, choice
+from PIL import Image, ImageTk  # Para cargar imágenes
+
+class Grid:
+    def __init__(self, root, size=16, cell_size=30, biome=None):
+        self.root = root
+        self.size = size  # Tamaño de la grid (size x size)
+        self.cell_size = cell_size  # Tamaño de cada celda en píxeles
+        self.food_positions = set()  # Conjunto de posiciones de comidas
+        self.biome = biome  # Puede ser "verano" o "invierno"
+
+        # Calcular dimensiones totales
+        self.width = self.size * self.cell_size
+        self.height = self.size * self.cell_size
+
+        # Crear el canvas
+        self.canvas = tk.Canvas(
+            self.root,
+            width=self.width,
+            height=self.height,
+            bg="black" 
+        )
+        self.canvas.pack(pady=10)
+
+        # Cargar y establecer la imagen de fondo
+        if self.biome in ["verano", "invierno"]:
+            self.set_background()
+
+        # Crear la grid visual
+        self.create_grid()
+
+    def set_background(self):
+        """Cargar y establecer la imagen de fondo según el bioma"""
+        try:
+            image_path = "files/biomaDesierto.jpg" if self.biome == "verano" else "files/biomaInvierno.jpg"
+            
+            # Cargar imagen con PIL
+            image = Image.open(image_path)
+            image = image.resize((self.width, self.height), Image.LANCZOS)  # Ajustar tamaño
+            self.bg_image = ImageTk.PhotoImage(image)  # Convertir a formato de Tkinter
+
+            # Dibujar la imagen en el canvas
+            self.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
+
+        except Exception as e:
+            print(f"Error al cargar la imagen de fondo: {e}")
+            # No hace nada, mantiene el fondo negro
+
+    def create_grid(self):
+        """Crear la cuadrícula visual"""
+        # Líneas verticales
+        for i in range(0, self.width + 1, self.cell_size):
+            self.canvas.create_line(
+                i, 0, i, self.height,
+                fill='gray20'
+            )
+
+        # Líneas horizontales
+        for i in range(0, self.height + 1, self.cell_size):
+            self.canvas.create_line(
+                0, i, self.width, i,
+                fill='gray20'
+            )
+
+    def spawn_food(self):
+        """Genera una nueva comida en una posición aleatoria vacía"""
+        while True:
+            x = choice(range(self.size))
+            y = choice(range(self.size))
+            position = (x, y)
+
+            # Asegura que la comida no reaparezca en una posición ya ocupada
+            if position not in self.food_positions:
+                self.food_positions.add(position)
+                self.draw_food(position)
+                break
+
+    def spawn_initial_food(self, num_food=10):
+        """Genera un número inicial de comidas aleatorias"""
+        self.canvas.delete('food')  # Elimina todas las comidas anteriores, si es necesario
+        self.food_positions.clear()  # Limpiar todas las posiciones de comida para regenerarlas
+
+        # Genera comidas nuevas
+        for _ in range(num_food):
+            self.spawn_food()
+
+    def redraw_food(self):
+        """Redibuja todas las comidas que no han sido consumidas"""
+        self.canvas.delete('food')  # Borra todas las comidas
+        for position in self.food_positions:
+            self.draw_food(position)
+
+    def draw_food(self, position):
+        """Dibujar comida en el canvas"""
+        x, y = position
+        pixel_x = x * self.cell_size
+        pixel_y = y * self.cell_size
+        padding = self.cell_size // 4
+        self.canvas.create_oval(
+            pixel_x + padding,
+            pixel_y + padding,
+            pixel_x + self.cell_size - padding,
+            pixel_y + self.cell_size - padding,
+            fill='red',
+            tag='food'
+        )
+
+
+    def find_nearest_food(self, x, y, radius=2):
+        """Buscar la comida más cercana dentro del radio especificado."""
+        nearest_food = None
+        shortest_distance = float('inf')
+
+        for food_x, food_y in self.food_positions:
+            distance = abs(food_x - x) + abs(food_y - y)
+            if distance <= radius and distance < shortest_distance:
+                nearest_food = (food_x, food_y)
+                shortest_distance = distance
+
+        return nearest_food
+    
+    def get_food_within_radius(self, x, y, radius):
+        """Devuelve una lista de posiciones de comida dentro del radio especificado."""
+        food_positions = []
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                nx, ny = x + dx, y + dy
+                # Verificar si la posición está dentro de los límites y contiene comida
+                if 0 <= nx < self.size and 0 <= ny < self.size and (nx, ny) in self.food_positions:
+                    food_positions.append((nx, ny))
+        return food_positions
+
+    def consume_food(self, x, y):
+        """
+        Consume comida en la posición (x, y) si existe.
+        Devuelve True si había comida y se consumió, de lo contrario, False.
+        """
+        position = (x, y)
+        if position in self.food_positions:
+            self.food_positions.remove(position)
+            self.redraw_food()  # Actualizar el canvas para eliminar la comida consumida
+            return True
+        return False
+
+    def update_bacteria_position(self, bacteria_id, new_x, new_y):
+        """
+        Actualiza la posición de una bacteria en el canvas.
+        Dibujar un rectángulo o círculo en la nueva posición de la bacteria.
+        """
+        # Etiqueta única para identificar la bacteria en el canvas
+        tag = f'bacteria_{bacteria_id}'
+        
+        # Elimina la representación previa de la bacteria
+        self.canvas.delete(tag)
+        
+        # Calcular coordenadas para dibujar la bacteria
+        pixel_x = new_x * self.cell_size
+        pixel_y = new_y * self.cell_size
+        padding = self.cell_size // 6
+        
+        # Dibujar la nueva posición de la bacteria
+        self.canvas.create_oval(
+            pixel_x + padding,
+            pixel_y + padding,
+            pixel_x + self.cell_size - padding,
+            pixel_y + self.cell_size - padding,
+            fill='green',
+            tag=tag
+        )

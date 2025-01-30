@@ -1,7 +1,9 @@
 import tkinter
 from tkinter import *
+import tkinter as tk
 from tkinter import messagebox, simpledialog
 from PIL import Image, ImageTk
+from panelTest import PanelJuego
 
 
 ventana_principal = Tk()  # Crear una ventana
@@ -25,7 +27,7 @@ pos_y = 90
 ventana_principal.geometry(f"{ventana_ancho}x{ventana_alto}+{pos_x}+{pos_y}")
 
 # Cargar una imagen de fondo (.gif o .ppm)
-ruta_imagen = "files/snakeInterfaz.gif"
+ruta_imagen = "files/Skull.gif"
 gif_imagen = Image.open(ruta_imagen)
 
 # Crear un Canvas para el fondo
@@ -73,9 +75,11 @@ def acerca_de():
     messagebox.showinfo("Acerca de", "Desarrollado por: Brian Aguinsaca y Abel Mora")
 
 
-def ventana_JuegoCartas():
+def ventana_Juego():
     ventana_principal.withdraw()
 
+    panelTest = PanelJuego(ventana_principal)  
+    panelTest.abrir_ventana()
 
 
 # Menú
@@ -85,7 +89,7 @@ menu_inicio.add_command(label="Salir", command=salir)
 
 menu_operaciones = tkinter.Menu(barra_menu, tearoff=0)
 barra_menu.add_cascade(label="Operaciones", menu=menu_operaciones)
-menu_operaciones.add_command(label="Simple Random Walk", command=ventana_JuegoCartas)
+menu_operaciones.add_command(label="Simple Random Walk", command=ventana_Juego)
 
 
 menu_ayuda = tkinter.Menu(barra_menu, tearoff=0)
