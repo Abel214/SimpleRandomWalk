@@ -15,6 +15,7 @@ class PanelJuego:
         self.message_label = None
         self.simulation_timer = None
         self.biome = None
+        self.is_simulating = False  # Variable para controlar el estado de simulación
         
         self.setup_ui()
         self.create_grid()
@@ -34,6 +35,12 @@ class PanelJuego:
             bg='gray30', fg='white', font=("Arial", 12), relief="raised"
         )
         self.repeat_button.pack(side="left", padx=10)
+
+        self.stop_button = tk.Button(
+            self.control_panel, text="Terminar", command=self.detener_simulacion,
+            bg='gray30', fg='white', font=("Arial", 12), relief="raised"
+        )
+        self.stop_button.pack(side="left", padx=10)
 
         self.cycle_label = tk.Label(
             self.control_panel, text=f"Ciclo: {self.current_cycle}",
@@ -66,12 +73,18 @@ class PanelJuego:
 
     def change_biome(self, event):
         """Actualizar la grid cuando cambia el bioma."""
+        if self.is_simulating:
+            return  # No hacer nada si la simulación está en curso
+        
         self.biome = self.biome_combo.get()
         self.create_grid()
 
 
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
+        self.is_simulating = True
+        self.biome_combo.config(state="disabled")
+
         self.grid.spawn_initial_food(self.num_food)  # Generar las comidas iniciales
         self.simulate_step()
 
@@ -166,6 +179,29 @@ class PanelJuego:
         self.message_label = tk.Label(self.grid.canvas, text=message, font=("Arial", 14), fg="red")
         self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
 
+        self.is_simulating = False
+        self.biome_combo.config(state="readonly")
+
+    def detener_simulacion(self):
+        """Detener todo el ciclo y las bacterias."""
+        if self.simulation_timer is not None:
+            self.root.after_cancel(self.simulation_timer)
+
+        self.is_simulating = False
+        self.biome_combo.config(state="readonly")
+
+        # Eliminar bacterias del panel
+        self.grid.canvas.delete('all')
+
+        # Eliminar el mensaje anterior si existe
+        if self.message_label is not None:
+            self.message_label.destroy()
+            self.message_label = None
+
+        # Crear un nuevo widget Label para mostrar el mensaje
+        self.message_label = tk.Label(self.grid.canvas, text="Simulación detenida.", font=("Arial", 14), fg="red")
+        self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
+
     def restart_game(self):
         """Reiniciar el juego"""
         if self.simulation_timer is not None:
@@ -210,3 +246,17 @@ class PanelJuego:
 
         # Initialize the PanelJuego in the new window
         PanelJuego(new_window, self.num_bacterias, self.num_food, self.steps_per_bacteria)
+        
+root = tk.Tk()
+root.title("Simple Random Walk")
+# Establecer el tamaño de la ventana
+root.geometry()
+
+# Centrar la ventana en la pantalla
+position_top = 50
+position_right = 500
+
+root.geometry(f"700x600+{position_right}+{position_top}")
+# Iniciar la aplicación
+app = PanelJuego(root)
+root.mainloop()
