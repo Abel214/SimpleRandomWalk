@@ -43,6 +43,11 @@ class Bacteria:
             self.initial_directions = [(-1, 0), (0, -1)]  # Solo arriba o izquierda
 
         self.draw_point()
+        #verificar si funciona de forma correcta
+        if self.check_food_collision():
+            print(f"Bacteria {self.bacteria_id}: Comió comida en posición inicial ({self.grid_x}, {self.grid_y})")
+            self.has_eaten = True
+            self.eaten_count += 1
 
     def will_collide(self, next_x, next_y):
         """Verifica si habrá colisión en la siguiente posición"""
@@ -205,7 +210,7 @@ class Bacteria:
         # Si no hay comida o el movimiento hacia la comida causa colisión, movimiento aleatorio
         if not chosen_move:
             chosen_move = choice(valid_moves)
-            print(f"Bacteria {self.bacteria_id}: Movimiento aleatorio por causa de no haber comida cerca")
+            print(f"Bacteria {self.bacteria_id}: Movimiento aleatorio por una colision cercana")
 
         self.last_position = (self.grid_x, self.grid_y)
         self.grid_x += chosen_move[0]
