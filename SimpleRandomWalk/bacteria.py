@@ -11,7 +11,7 @@ class Bacteria:
         self.life_time = steps_per_bacteria + 1
         self.steps_per_bacteria = steps_per_bacteria
         self.num_cycles = 0
-        self.max_cycles = 6
+        self.max_cycles = 8
         self.initial_move = True
         self.last_position = None
         self.bacteria_id = bacteria_id
@@ -163,7 +163,12 @@ class Bacteria:
             self.waiting_for_others = True
             return False
 
-        # Obtain valid moves considering collisions
+        steps = min(self.current_speed, self.grid_size)  # Limita la velocidad máxima
+        for _ in range(steps):
+            valid_moves = [move for move in self.get_valid_moves()
+                           if not self.will_collide(self.grid_x + move[0], self.grid_y + move[1])]
+
+        #Obtenemos casillas para detectar colisiones cercanas
         if self.initial_move:
             valid_moves = []
             for move in self.initial_directions:
