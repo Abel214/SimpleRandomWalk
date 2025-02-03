@@ -198,15 +198,15 @@ class PanelJuego:
         self.grid.spawn_initial_food(self.num_food)
         self.start_simulation()
 
-    def abrir_ventana(self):
+    def abrir_ventana(self,  background_image_path=None):
         """Abre una nueva ventana para ejecutar la clase desde otra clase."""
         # Crear nueva ventana
-        ventana_juego = tk.Toplevel(self.root)
-        ventana_juego.title("Simulación de Bacterias")
+        self.ventana_juego = tk.Toplevel(self.root)
+        self.ventana_juego.title("Simulación de Bacterias")
 
         # Obtener dimensiones de la pantalla
-        screen_width = ventana_juego.winfo_screenwidth()
-        screen_height = ventana_juego.winfo_screenheight()
+        screen_width = self.ventana_juego.winfo_screenwidth()
+        screen_height = self.ventana_juego.winfo_screenheight()
 
         # Establecer dimensiones de la ventana
         window_width = 900
@@ -214,14 +214,18 @@ class PanelJuego:
 
         # Calcular posición para centrar la ventana
         position_x = 400
-        position_y = 40
+        position_y = 50
 
         # Establecer geometría de la ventana
-        ventana_juego.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
+        self.ventana_juego.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
 
         # Crear una nueva instancia de PanelJuego en la nueva ventana
-        self.root = ventana_juego  # Actualizar la referencia a la ventana raíz
+        self.root = self.ventana_juego  # Actualizar la referencia a la ventana raíz
         self.setup_ui()  # Configurar la interfaz en la nueva ventana
+
+        # Add the background image to the canvas
+        if background_image_path:
+            self.grid.load_background(background_image_path)
         self.grid.spawn_initial_food(self.num_food)
         self.start_simulation()
 

@@ -1,6 +1,6 @@
 import tkinter as tk
 from random import randint, choice
-
+from PIL import Image, ImageTk
 
 class Grid:
     def __init__(self, root, size=20, cell_size=30):  # Aumenté el tamaño de la grid a 32x32
@@ -11,7 +11,7 @@ class Grid:
         # Calcular dimensiones totales
         self.width = self.size * self.cell_size
         self.height = self.size * self.cell_size
-
+        self.bg_image = None
         # Crear el canvas
         self.canvas = tk.Canvas(
             self.root,
@@ -53,6 +53,15 @@ class Grid:
                 self.draw_food(position)
                 break
 
+    def load_background(self, image_path):
+        """Carga y coloca la imagen de fondo en el Canvas."""
+        try:
+            image = Image.open(image_path)
+            image = image.resize((self.width, self.height))  # Ajusta al tamaño del canvas
+            self.bg_image = ImageTk.PhotoImage(image)
+            self.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
+        except Exception as e:
+            print(f"Error al cargar la imagen de fondo: {e}")
     def spawn_initial_food(self, num_food=10):
         """Genera un número inicial de comidas aleatorias"""
         self.canvas.delete('food')  # Elimina todas las comidas anteriores, si es necesario

@@ -35,7 +35,6 @@ class Intermedio:
         self.bg_right = Image.open("files/biomaDesierto.jpg")
         self.bg_right = self.bg_right.resize((400, 500))
         self.bg_right = ImageTk.PhotoImage(self.bg_right)
-
         # Canvas para colocar imágenes
         self.canvas = tk.Canvas(self.ventana_intermedia, width=800, height=400)
         # Centrar el canvas, puedes modificar estos valores para moverlo según lo necesites
@@ -62,9 +61,10 @@ class Intermedio:
         num_bacterias = 1
         num_food = 10
         steps_per_bacteria = 6
-        panel_juego = PanelJuego(self.ventana_principal,self.ventana_intermedia ,num_bacterias, num_food, steps_per_bacteria)
-        panel_juego.abrir_ventana()
-        # Aquí puedes abrir el juego en el bioma de invierno
+        panel_juego = PanelJuego(self.ventana_principal, self.ventana_intermedia, num_bacterias, num_food,
+                                 steps_per_bacteria)
+        panel_juego.abrir_ventana("files/War2.png")
+
 
     def seleccionar_desierto(self):
         self.ventana_intermedia.withdraw()
@@ -72,9 +72,10 @@ class Intermedio:
         num_bacterias = 2
         num_food = 30
         steps_per_bacteria = 6
-        panel_juego = PanelJuego(self.ventana_principal,self.ventana_intermedia ,num_bacterias, num_food, steps_per_bacteria)
-        panel_juego.abrir_ventana()
-        # Aquí puedes abrir el juego en el bioma de desierto
+        panel_juego = PanelJuego(self.ventana_principal, self.ventana_intermedia, num_bacterias, num_food,
+                                 steps_per_bacteria)
+        panel_juego.abrir_ventana("files/War3.png")
+
 
     def volver_menu(self):
         self.ventana_intermedia.destroy()  # Cierra la ventana intermedia
