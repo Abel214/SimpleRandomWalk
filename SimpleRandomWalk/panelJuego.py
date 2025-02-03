@@ -2,7 +2,7 @@ import tkinter as tk
 from bacteria import Bacteria
 from grid import Grid
 
-MAX_CYCLES = 6
+MAX_CYCLES = 3
 
 class PanelJuego:
     def __init__(self, root,Intermedio, num_bacterias=0, num_food=0, steps_per_bacteria=0):
@@ -105,8 +105,6 @@ class PanelJuego:
                         bacteria.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
                 else:
                     print(f"Bacteria {bacteria.bacteria_id} está esperando a que termine el ciclo")
-
-        # Verificar cuántas bacterias están vivas
         alive_bacterias = [bacteria for bacteria in self.bacterias if bacteria.is_alive]
 
         if not alive_bacterias:
@@ -122,6 +120,7 @@ class PanelJuego:
             # Continuar con el siguiente paso en el ciclo actual
             print(f"Bacterias vivas en ciclo {self.current_cycle}: {[b.bacteria_id for b in alive_bacterias]}")
             self.simulation_timer = self.root.after(1000, self.simulate_step)
+
 
     def start_new_cycle(self, alive_bacterias):
         """Iniciar un nuevo ciclo de la simulación sin regenerar comida."""
