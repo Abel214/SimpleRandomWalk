@@ -1,7 +1,10 @@
 import tkinter as tk
 from tkinter import Toplevel
 from PIL import Image, ImageTk  # Importa Pillow
-from panelJuego import PanelJuego
+
+from SimpleRandomWalk.UI.panelJuego import PanelJuego
+
+
 class Intermedio:
     def __init__(self, ventana_principal):
         self.ventana_principal = ventana_principal

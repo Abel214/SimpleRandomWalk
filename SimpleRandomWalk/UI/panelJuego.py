@@ -1,22 +1,27 @@
 import tkinter as tk
-from bacteria import Bacteria
-from grid import Grid
+from SimpleRandomWalk.Logica.bacteria import Bacteria
+from SimpleRandomWalk.Bacteria.grid import Grid
 
 MAX_CYCLES = 3
 
 class PanelJuego:
-    def __init__(self, root,Intermedio, num_bacterias=0, num_food=0, steps_per_bacteria=0):
+    def __init__(self, root, Intermedio, num_bacterias=0, num_food=0, steps_per_bacteria=0):
         self.root = root
         self.num_bacterias = num_bacterias
         self.num_food = num_food
         self.steps_per_bacteria = steps_per_bacteria
         self.current_cycle = 1
         self.message_label = None  # Referencia para el Label del mensaje
+
+        # First, set up the UI which creates the grid
         self.setup_ui()
+
+        # Now, spawn initial food
         self.grid.spawn_initial_food(self.num_food)  # Generar comida inicial
+
         self.simulation_timer = None
         self.start_simulation()
-        self.Intermedio=Intermedio
+        self.Intermedio = Intermedio
     def setup_ui(self):
         """Configurar la interfaz del juego"""
         # Panel principal
@@ -74,14 +79,15 @@ class PanelJuego:
         self.grid = Grid(self.game_frame)
 
         # Crear las bacterias con identificadores únicos
-        self.bacterias = [
-            Bacteria(self.grid, i, self.steps_per_bacteria)
-            for i in range(self.num_bacterias)
-        ]  # Crear bacterias con el número de pasos
+
 
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
         self.grid.spawn_initial_food(self.num_food)  # Generar las comidas iniciales
+        self.bacterias = [
+            Bacteria(self.grid, i, self.steps_per_bacteria)
+            for i in range(self.num_bacterias)
+        ]
         self.simulate_step()
 
     def simulate_step(self):
@@ -175,7 +181,6 @@ class PanelJuego:
         self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
 
     def restart_game(self):
-        """Reiniciar el juego"""
         if self.simulation_timer is not None:
             self.root.after_cancel(self.simulation_timer)
 
@@ -184,7 +189,7 @@ class PanelJuego:
 
         # Limpiar la cuadrícula y eliminar el mensaje
         if self.message_label is not None:
-            self.message_label.destroy()  # Eliminar el mensaje de finalización
+            self.message_label.destroy()
             self.message_label = None
 
         # Reiniciar la cuadrícula y las bacterias
@@ -198,7 +203,7 @@ class PanelJuego:
         self.grid.spawn_initial_food(self.num_food)
         self.start_simulation()
 
-    def abrir_ventana(self,  background_image_path=None):
+    def abrir_ventana(self, background_image_path=None):
         """Abre una nueva ventana para ejecutar la clase desde otra clase."""
         # Crear nueva ventana
         self.ventana_juego = tk.Toplevel(self.root)
@@ -219,22 +224,39 @@ class PanelJuego:
         # Establecer geometría de la ventana
         self.ventana_juego.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
 
-        # Crear una nueva instancia de PanelJuego en la nueva ventana
-        self.root = self.ventana_juego  # Actualizar la referencia a la ventana raíz
-        self.setup_ui()  # Configurar la interfaz en la nueva ventana
+        # Modify the existing instance to use the new window
+        self.root = self.ventana_juego
+
+        # Recreate the UI elements with the new root
+        self.panel.destroy()  # Destroy the existing panel
+        self.setup_ui()  # Recreate UI with the new root
+
+        # Restart the simulation
+        if self.simulation_timer is not None:
+            self.root.after_cancel(self.simulation_timer)
+
+        self.current_cycle = 1
+        self.grid.create_grid()
+        self.grid.spawn_initial_food(self.num_food)
+
+        self.bacterias = [
+            Bacteria(self.grid, i, self.steps_per_bacteria)
+            for i in range(self.num_bacterias)
+        ]
 
         # Add the background image to the canvas
         if background_image_path:
             self.grid.load_background(background_image_path)
-        self.grid.spawn_initial_food(self.num_food)
-        self.start_simulation()
 
+        self.start_simulation()
     def regresar_ventana_intermedia(self):
         """Regresar a la ventana intermedia"""
-        from Intermedio import Intermedio
-        self.root.destroy()  # Cerrar ventana del juego
-        self.Intermedio.deiconify()
-    #Por si se desea probar por separado esta ventana; recordar pasar parametros
+        self.root.destroy()  # Destroy the current window
+        self.Intermedio.deiconify()  # Show the intermediate window
+
+
+
+#Por si se desea probar por separado esta ventana; recordar pasar parametros
 #root = tk.Tk()
 #root.title("Simple Random Walk")
 #Establecer el tamaño de la ventana

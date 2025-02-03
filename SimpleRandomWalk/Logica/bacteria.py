@@ -27,7 +27,7 @@ class Bacteria:
         self.walk_sprites = []  # Inicializa la lista de sprites
         self.current_direction = None
         self.sprite = None  # Aquí almacenamos el sprite de la bacteria
-
+        self.sprite_update_counter=0
         # Cargar los sprites solo una vez
         self.load_sprites()
 
@@ -36,7 +36,54 @@ class Bacteria:
     def load_sprites(self):
         """Carga los sprites de la bacteria (Walk1.png a Walk10.png)"""
         try:
-            self.walk_sprites = [tk.PhotoImage(file=f"files/zombie/Walk{i}.png") for i in range(1, 11)]
+            # Asegúrate de que estos archivos existen y son accesibles
+            self.walk_sprites = []
+            for i in range(1, 11):
+                sprite_path = f"files/zombie/Walk{i}.png"
+                try:
+                    sprite = tk.PhotoImage(file=sprite_path)
+                    # Mantén una referencia a la imagen para evitar que sea recolectada
+                    self.walk_sprites.append(sprite)
+                except Exception as e:
+                    print(f"Error cargando sprite {i}: {e}")
+                    # Usa una imagen de respaldo si no se puede cargar
+                    self.walk_sprites.append(None)
+
+            # Verificación más detallada
+            if len(self.walk_sprites) != 10 or any(sprite is None for sprite in self.walk_sprites):
+                print("Advertencia: No se cargaron todos los sprites correctamente")
+
+        except Exception as e:
+            print(f"Error general al cargar los sprites: {e}")
+
+    def load_dead_sprites(self):
+        """Carga los sprites de muerte de la bacteria ( Dead1.png)"""
+        try:
+            # Cargar sprites de muerte
+            self.dead_sprites = []
+            for i in range(1, 3):  # Asumiendo que hay 2 sprites de muerte
+                sprite_path = f"files/zombie/Dead{i}.png"
+                try:
+                    sprite = tk.PhotoImage(file=sprite_path)
+                    # Mantén una referencia a la imagen para evitar que sea recolectada
+                    self.dead_sprites.append(sprite)
+                except Exception as e:
+                    print(f"Error cargando sprite de muerte {i}: {e}")
+                    # Usa una imagen de respaldo si no se puede cargar
+                    self.dead_sprites.append(None)
+
+            # Verificación más detallada
+            if len(self.dead_sprites) != 2 or any(sprite is None for sprite in self.dead_sprites):
+                print("Advertencia: No se cargaron todos los sprites de muerte correctamente")
+
+        except Exception as e:
+            print(f"Error general al cargar los sprites de muerte: {e}")
+
+
+    def load_spritesAttack(self):
+        """Carga los sprites de la bacteria (Walk1.png a Walk10.png)"""
+        try:
+            self.walk_sprites = [tk.PhotoImage(file=f"files/zombie/Attack{i}.png") for i in range(1, 3)]
             # Verificar que todos los sprites se cargaron correctamente
             if None in self.walk_sprites:
                 raise ValueError("Algunos sprites no se cargaron correctamente.")
@@ -65,6 +112,11 @@ class Bacteria:
             self.initial_directions = [(-1, 0), (0, -1)]  # Solo arriba o izquierda
 
         self.draw_point()
+        if self.check_food_collision():
+            print(f"Bacteria {self.bacteria_id}: Comió comida en posición inicial ({self.grid_x}, {self.grid_y})")
+            self.has_eaten = True
+            self.eaten_count += 1
+            self.load_spritesAttack()
 
     def will_collide(self, next_x, next_y):
         """Verifica si habrá colisión en la siguiente posición"""
@@ -88,6 +140,7 @@ class Bacteria:
                         '_text') and not tag == f'bacteria_{self.bacteria_id}':
                     return True
         return False
+
     def draw_point(self):
         """Dibuja la bacteria en la cuadrícula y su identificador con la animación del sprite"""
         if not self.is_alive:
@@ -98,6 +151,13 @@ class Bacteria:
             print("Error: Los sprites no están cargados.")
             return
 
+        # Añadir un contador para controlar la velocidad de animación
+        if not hasattr(self, 'sprite_animation_counter'):
+            self.sprite_animation_counter = 0
+        self.sprite_update_counter += 1
+        if self.sprite_update_counter >= 3:  # Cambiar sprite cada 3 frames
+            self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
+            self.sprite_update_counter = 0
         pixel_x = self.grid_x * self.cell_size
         pixel_y = self.grid_y * self.cell_size
         self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Eliminar la bacteria anterior
@@ -106,6 +166,13 @@ class Bacteria:
 
         # Aquí es donde se dibuja la bacteria con la animación del sprite
         if self.is_alive:
+            # Controlar la velocidad de animación
+            self.sprite_animation_counter += 1
+            if self.sprite_animation_counter >= 5:  # Cambiar sprite cada 5 frames
+                # Asegurarse de que walk_index esté dentro del rango válido
+                self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
+                self.sprite_animation_counter = 0
+
             # Dibujar la bacteria usando un sprite (Walk1 a Walk10)
             self.canvas.create_image(
                 pixel_x + self.cell_size // 2,  # Centrado en la celda
@@ -113,9 +180,6 @@ class Bacteria:
                 image=self.walk_sprites[self.walk_index],  # Usar el sprite actual
                 tag=f'bacteria_{self.bacteria_id}_sprite'  # Etiqueta única para el sprite
             )
-
-            # Actualizar el índice del sprite para la animación
-            self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
 
             # Dibujar el identificador de la bacteria (el número) encima del sprite
             self.canvas.create_text(
@@ -151,9 +215,8 @@ class Bacteria:
     def move(self):
         """Mueve la bacteria con prioridad hacia la comida detectada por radar."""
         if not self.is_alive:
-            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}')
-            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_text')
-            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')
+            self.load_dead_sprites()  # Load death sprites
+            self.draw_dead_point()  # Draw death animation
             return False
 
         if self.life_time <= 0:
@@ -189,9 +252,8 @@ class Bacteria:
                 if self.life_time <= 0:
                     self.is_alive = False
                     print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
-                    self.grid.canvas.delete(f'bacteria_{self.bacteria_id}')
-                    self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_text')
-                    self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')
+                    self.load_dead_sprites()  # Load death sprites
+                    self.draw_dead_point()  # Draw death animation
                 return self.is_alive
 
         # Detectar comida dentro del radio de 2 celdas
@@ -224,6 +286,7 @@ class Bacteria:
             print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
             self.has_eaten = True
             self.eaten_count += 1
+            self.load_spritesAttack()
             if self.eaten_count >= 2 and self.current_speed < 2:
                 self.speed_increment_pending = True
                 print(f"Bacteria {self.bacteria_id}: Velocidad pendiente para el próximo ciclo")
@@ -248,6 +311,8 @@ class Bacteria:
         if self.life_time <= 0:
             self.is_alive = False
             print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+            self.load_dead_sprites()  # Load death sprites
+            self.draw_dead_point()  # Draw death animation
         else:
             print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
 
@@ -335,3 +400,34 @@ class Bacteria:
                     valid_directions.append((dx, dy))
 
         return choice(valid_directions) if valid_directions else None
+
+    def draw_dead_point(self):
+        """Dibuja los sprites de muerte de la bacteria"""
+        if not self.is_alive and hasattr(self, 'dead_sprites'):
+            # Verificar si los sprites de muerte están cargados correctamente
+            if not self.dead_sprites:
+                print("Error: Los sprites de muerte no están cargados.")
+                return
+
+            # Añadir un contador para controlar la velocidad de animación de los sprites de muerte
+            if not hasattr(self, 'dead_sprite_animation_counter'):
+                self.dead_sprite_animation_counter = 0
+
+            self.dead_sprite_animation_counter += 1
+            dead_sprite_index = (self.dead_sprite_animation_counter // 5) % len(self.dead_sprites)
+
+            pixel_x = self.grid_x * self.cell_size
+            pixel_y = self.grid_y * self.cell_size
+
+            # Eliminar sprites anteriores
+            self.canvas.delete(f'bacteria_{self.bacteria_id}')
+            self.canvas.delete(f'bacteria_{self.bacteria_id}_text')
+            self.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')
+
+            # Dibujar la bacteria usando un sprite de muerte
+            self.canvas.create_image(
+                pixel_x + self.cell_size // 2,  # Centrado en la celda
+                pixel_y + self.cell_size // 2,  # Centrado en la celda
+                image=self.dead_sprites[dead_sprite_index],  # Usar el sprite de muerte actual
+                tag=f'bacteria_{self.bacteria_id}_sprite'  # Etiqueta única para el sprite
+            )
