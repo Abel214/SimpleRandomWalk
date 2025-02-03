@@ -94,7 +94,7 @@ class PanelJuego:
             if not bacteria.is_alive:
                 self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
                 self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
-
+                self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_sprite')
         # Actualizar el estado de todas las bacterias
         all_waiting = True
         for bacteria in self.bacterias:
@@ -209,12 +209,12 @@ class PanelJuego:
         screen_height = ventana_juego.winfo_screenheight()
 
         # Establecer dimensiones de la ventana
-        window_width = 700
-        window_height = 600
+        window_width = 900
+        window_height = 700
 
         # Calcular posición para centrar la ventana
-        position_x = int((screen_width / 2) - (window_width / 2))
-        position_y = 100
+        position_x = 400
+        position_y = 40
 
         # Establecer geometría de la ventana
         ventana_juego.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")

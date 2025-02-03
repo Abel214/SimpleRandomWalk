@@ -153,6 +153,7 @@ class Bacteria:
         if not self.is_alive:
             self.grid.canvas.delete(f'bacteria_{self.bacteria_id}')
             self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_text')
+            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')
             return False
 
         if self.life_time <= 0:
@@ -188,6 +189,9 @@ class Bacteria:
                 if self.life_time <= 0:
                     self.is_alive = False
                     print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
+                    self.grid.canvas.delete(f'bacteria_{self.bacteria_id}')
+                    self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_text')
+                    self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')
                 return self.is_alive
 
         # Detectar comida dentro del radio de 2 celdas
@@ -254,7 +258,7 @@ class Bacteria:
         print(f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
         root = tk.Tk()
         root.withdraw()  # Oculta la ventana principal
-        messagebox.showinfo("Bacterias Sobrevivientes",
+        print("Bacterias Sobrevivientes",
                             f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
 
         # Si comió dos comidas, incrementar velocidad
@@ -264,7 +268,7 @@ class Bacteria:
             # Mostrar alerta al usuario
             root = tk.Tk()
             root.withdraw()  # Oculta la ventana principal
-            messagebox.showinfo("Incremento de Velocidad",
+            print("Incremento de Velocidad",
                                 f"La bacteria {self.bacteria_id} ha incrementado su velocidad a {self.current_speed}.")
 
         # Resetear el contador de comidas

@@ -1,8 +1,9 @@
 import tkinter as tk
 from random import randint, choice
 
+
 class Grid:
-    def __init__(self, root, size=16, cell_size=30):
+    def __init__(self, root, size=20, cell_size=30):  # Aumenté el tamaño de la grid a 32x32
         self.root = root
         self.size = size  # Tamaño de la grid (size x size)
         self.cell_size = cell_size  # Tamaño de cada celda en píxeles
@@ -82,7 +83,6 @@ class Grid:
             tag='food'
         )
 
-
     def find_nearest_food(self, x, y, radius=2):
         """Buscar la comida más cercana dentro del radio especificado."""
         nearest_food = None
@@ -95,7 +95,7 @@ class Grid:
                 shortest_distance = distance
 
         return nearest_food
-    
+
     def get_food_within_radius(self, x, y, radius):
         """Devuelve una lista de posiciones de comida dentro del radio especificado."""
         food_positions = []
@@ -126,15 +126,15 @@ class Grid:
         """
         # Etiqueta única para identificar la bacteria en el canvas
         tag = f'bacteria_{bacteria_id}'
-        
+
         # Elimina la representación previa de la bacteria
         self.canvas.delete(tag)
-        
+
         # Calcular coordenadas para dibujar la bacteria
         pixel_x = new_x * self.cell_size
         pixel_y = new_y * self.cell_size
         padding = self.cell_size // 6
-        
+
         # Dibujar la nueva posición de la bacteria
         self.canvas.create_oval(
             pixel_x + padding,
@@ -144,7 +144,3 @@ class Grid:
             fill='green',
             tag=tag
         )
-
-
-
-
