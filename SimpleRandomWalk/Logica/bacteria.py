@@ -150,7 +150,7 @@ class Bacteria:
         if not self.walk_sprites:
             print("Error: Los sprites no están cargados.")
             return
-
+        self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
         # Añadir un contador para controlar la velocidad de animación
         if not hasattr(self, 'sprite_animation_counter'):
             self.sprite_animation_counter = 0
