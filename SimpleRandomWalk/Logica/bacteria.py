@@ -23,76 +23,8 @@ class Bacteria:
         self.eaten_count = 0
         self.speed_increment_pending = False
         self.waiting_for_others = False
-        self.walk_index = 0  # Inicializa el índice del sprite
-        self.walk_sprites = []  # Inicializa la lista de sprites
         self.current_direction = None
-        self.sprite = None  # Aquí almacenamos el sprite de la bacteria
-        self.sprite_update_counter=0
-        # Cargar los sprites solo una vez
-        self.load_sprites()
-
         self.create_initial_point()
-
-    def load_sprites(self):
-        """Carga los sprites de la bacteria (Walk1.png a Walk10.png)"""
-        try:
-            # Asegúrate de que estos archivos existen y son accesibles
-            self.walk_sprites = []
-            for i in range(1, 11):
-                sprite_path = f"files/zombie/Walk{i}.png"
-                try:
-                    sprite = tk.PhotoImage(file=sprite_path)
-                    # Mantén una referencia a la imagen para evitar que sea recolectada
-                    self.walk_sprites.append(sprite)
-                except Exception as e:
-                    print(f"Error cargando sprite {i}: {e}")
-                    # Usa una imagen de respaldo si no se puede cargar
-                    self.walk_sprites.append(None)
-
-            # Verificación más detallada
-            if len(self.walk_sprites) != 10 or any(sprite is None for sprite in self.walk_sprites):
-                print("Advertencia: No se cargaron todos los sprites correctamente")
-
-        except Exception as e:
-            print(f"Error general al cargar los sprites: {e}")
-
-    def load_dead_sprites(self):
-        """Carga los sprites de muerte de la bacteria ( Dead1.png)"""
-        try:
-            # Cargar sprites de muerte
-            self.dead_sprites = []
-            for i in range(1, 3):  # Asumiendo que hay 2 sprites de muerte
-                sprite_path = f"files/zombie/Dead{i}.png"
-                try:
-                    sprite = tk.PhotoImage(file=sprite_path)
-                    # Mantén una referencia a la imagen para evitar que sea recolectada
-                    self.dead_sprites.append(sprite)
-                except Exception as e:
-                    print(f"Error cargando sprite de muerte {i}: {e}")
-                    # Usa una imagen de respaldo si no se puede cargar
-                    self.dead_sprites.append(None)
-
-            # Verificación más detallada
-            if len(self.dead_sprites) != 2 or any(sprite is None for sprite in self.dead_sprites):
-                print("Advertencia: No se cargaron todos los sprites de muerte correctamente")
-
-        except Exception as e:
-            print(f"Error general al cargar los sprites de muerte: {e}")
-
-
-    def load_spritesAttack(self):
-        """Carga los sprites de la bacteria (Walk1.png a Walk10.png)"""
-        try:
-            self.walk_sprites = [tk.PhotoImage(file=f"files/zombie/Attack{i}.png") for i in range(1, 3)]
-            # Verificar que todos los sprites se cargaron correctamente
-            if None in self.walk_sprites:
-                raise ValueError("Algunos sprites no se cargaron correctamente.")
-        except Exception as e:
-            print(f"Error al cargar los sprites: {e}")
-
-    def create_sprite(self):
-        """Crear el sprite de la bacteria en el canvas."""
-        self.sprite = self.canvas.create_image(self.x, self.y, image=self.walk_sprites[self.walk_index])
 
     def create_initial_point(self):
         """Crea la bacteria en una de las cuatro esquinas y define su dirección inicial"""
@@ -112,11 +44,11 @@ class Bacteria:
             self.initial_directions = [(-1, 0), (0, -1)]  # Solo arriba o izquierda
 
         self.draw_point()
+        # verificar si funciona de forma correcta
         if self.check_food_collision():
             print(f"Bacteria {self.bacteria_id}: Comió comida en posición inicial ({self.grid_x}, {self.grid_y})")
             self.has_eaten = True
             self.eaten_count += 1
-            self.load_spritesAttack()
 
     def will_collide(self, next_x, next_y):
         """Verifica si habrá colisión en la siguiente posición"""
@@ -142,52 +74,34 @@ class Bacteria:
         return False
 
     def draw_point(self):
-        """Dibuja la bacteria en la cuadrícula y su identificador con la animación del sprite"""
+        """Dibuja la bacteria en la cuadrícula y su identificador sin dejar rastro"""
         if not self.is_alive:
             return  # No dibujar si está muerta
-
-        # Verificar si los sprites están cargados correctamente
-        if not self.walk_sprites:
-            print("Error: Los sprites no están cargados.")
-            return
-        self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
-        # Añadir un contador para controlar la velocidad de animación
-        if not hasattr(self, 'sprite_animation_counter'):
-            self.sprite_animation_counter = 0
-        self.sprite_update_counter += 1
-        if self.sprite_update_counter >= 3:  # Cambiar sprite cada 3 frames
-            self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
-            self.sprite_update_counter = 0
         pixel_x = self.grid_x * self.cell_size
         pixel_y = self.grid_y * self.cell_size
-        self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Eliminar la bacteria anterior
+        self.canvas.delete(f'bacteria_{self.bacteria_id}')  # Eliminar el círculo de la bacteria anterior
         self.canvas.delete(f'bacteria_{self.bacteria_id}_text')  # Eliminar el texto de la bacteria anterior
-        self.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')  # Eliminar el sprite anterior
+        padding = self.cell_size // 4
 
-        # Aquí es donde se dibuja la bacteria con la animación del sprite
+        # Aquí es donde se dibuja la bacteria en la cuadrícula
         if self.is_alive:
-            # Controlar la velocidad de animación
-            self.sprite_animation_counter += 1
-            if self.sprite_animation_counter >= 5:  # Cambiar sprite cada 5 frames
-                # Asegurarse de que walk_index esté dentro del rango válido
-                self.walk_index = (self.walk_index + 1) % len(self.walk_sprites)
-                self.sprite_animation_counter = 0
-
-            # Dibujar la bacteria usando un sprite (Walk1 a Walk10)
-            self.canvas.create_image(
-                pixel_x + self.cell_size // 2,  # Centrado en la celda
-                pixel_y + self.cell_size // 2,  # Centrado en la celda
-                image=self.walk_sprites[self.walk_index],  # Usar el sprite actual
-                tag=f'bacteria_{self.bacteria_id}_sprite'  # Etiqueta única para el sprite
+            # Dibujar la bacteria como un círculo
+            self.canvas.create_oval(
+                pixel_x + padding,
+                pixel_y + padding,
+                pixel_x + self.cell_size - padding,
+                pixel_y + self.cell_size - padding,
+                fill='green',
+                tag=f'bacteria_{self.bacteria_id}'  # Usamos el ID como tag único
             )
 
-            # Dibujar el identificador de la bacteria (el número) encima del sprite
+            # Dibujar el identificador de la bacteria (el número) encima del círculo
             self.canvas.create_text(
                 pixel_x + self.cell_size // 2,  # Centrado en el medio de la celda
                 pixel_y + self.cell_size // 2,  # Centrado en el medio de la celda
                 text=str(self.bacteria_id),  # El número identificador
-                fill='red',  # Color del texto
-                font=('Arial', 12, 'bold'),  # Estilo y tamaño de la fuente
+                fill='white',  # Color del texto
+                font=('Arial', 8, 'bold'),  # Estilo y tamaño de la fuente
                 tag=f'bacteria_{self.bacteria_id}_text'  # Etiqueta única para el texto
             )
 
@@ -212,11 +126,33 @@ class Bacteria:
 
         return valid_moves
 
+    def get_alternative_direction(self, current_x, current_y):
+        """Obtiene una dirección alternativa cuando hay colisión"""
+        possible_directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # derecha, abajo, izquierda, arriba
+        valid_directions = []
+
+        for dx, dy in possible_directions:
+            next_x = current_x + dx
+            next_y = current_y + dy
+
+            # Verificar si la nueva dirección está dentro de los límites
+            if (0 <= next_x < self.grid_size and
+                    0 <= next_y < self.grid_size and
+                    not self.will_collide(next_x, next_y)):
+
+                # Si estamos en el movimiento inicial o no hay dirección actual, aceptar cualquier dirección válida
+                if self.initial_move or self.current_direction is None:
+                    valid_directions.append((dx, dy))
+                # Si no es movimiento inicial, evitar retroceder
+                elif (dx, dy) != (-self.current_direction[0], -self.current_direction[1]):
+                    valid_directions.append((dx, dy))
+
+        return choice(valid_directions) if valid_directions else None
     def move(self):
-        """Mueve la bacteria con prioridad hacia la comida detectada por radar."""
+        """Mueve la bacteria con prioridad hacia la comida detectada por radar y evita colisiones."""
         if not self.is_alive:
-            self.load_dead_sprites()  # Load death sprites
-            self.draw_dead_point()  # Draw death animation
+            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}')
+            self.grid.canvas.delete(f'bacteria_{self.bacteria_id}_text')
             return False
 
         if self.life_time <= 0:
@@ -227,22 +163,25 @@ class Bacteria:
         if self.has_eaten and self.life_time == 1:
             self.waiting_for_others = True
             return False
+
         steps = min(self.current_speed, self.grid_size)  # Limita la velocidad máxima
         for _ in range(steps):
             valid_moves = [move for move in self.get_valid_moves()
                            if not self.will_collide(self.grid_x + move[0], self.grid_y + move[1])]
-        # Obtener movimientos válidos
+
+        # Obtenemos casillas para detectar colisiones cercanas
         if self.initial_move:
             valid_moves = []
             for move in self.initial_directions:
                 new_x, new_y = self.grid_x + move[0], self.grid_y + move[1]
-                if (new_x, new_y) != (self.grid_x, self.grid_y):
+                if (new_x, new_y) != (self.grid_x, self.grid_y) and not self.will_collide(new_x, new_y):
                     valid_moves.append(move)
         else:
             valid_moves = [move for move in self.get_valid_moves()
                            if not self.will_collide(self.grid_x + move[0], self.grid_y + move[1])]
 
         if not valid_moves:
+            # Si no hay movimientos válidos debido a colisiones, buscar dirección alternativa
             alternative_direction = self.get_alternative_direction(self.grid_x, self.grid_y)
             if alternative_direction:
                 valid_moves = [alternative_direction]
@@ -252,14 +191,14 @@ class Bacteria:
                 if self.life_time <= 0:
                     self.is_alive = False
                     print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
-                    self.load_dead_sprites()  # Load death sprites
-                    self.draw_dead_point()  # Draw death animation
                 return self.is_alive
 
         # Detectar comida dentro del radio de 2 celdas
         food_positions = self.grid.get_food_within_radius(self.grid_x, self.grid_y, radius=2)
         chosen_move = None
+
         if food_positions:
+            # Si hay comida en el radio, intentar moverse hacia la más cercana
             closest_food = min(
                 food_positions,
                 key=lambda food: abs(food[0] - self.grid_x) + abs(food[1] - self.grid_y)
@@ -274,24 +213,25 @@ class Bacteria:
                 chosen_move = desired_move
                 print(f"Bacteria {self.bacteria_id}: Moviéndose hacia la comida en {closest_food}")
 
+        # Si no hay comida o el movimiento hacia la comida causa colisión, movimiento aleatorio
         if not chosen_move:
             chosen_move = choice(valid_moves)
             print(f"Bacteria {self.bacteria_id}: Movimiento aleatorio por una colision cercana")
+
         self.last_position = (self.grid_x, self.grid_y)
         self.grid_x += chosen_move[0]
         self.grid_y += chosen_move[1]
 
-        # Verificar colisión con comida
+        # Check for food collision
         if self.check_food_collision():
             print(f"Bacteria {self.bacteria_id}: Comió comida en ({self.grid_x}, {self.grid_y})")
             self.has_eaten = True
             self.eaten_count += 1
-            self.load_spritesAttack()
             if self.eaten_count >= 2 and self.current_speed < 2:
                 self.speed_increment_pending = True
                 print(f"Bacteria {self.bacteria_id}: Velocidad pendiente para el próximo ciclo")
 
-        # Mover múltiples pasos según la velocidad actual
+        # Move multiple steps based on current speed, checking for collisions
         for _ in range(self.current_speed):
             next_x = self.grid_x + chosen_move[0]
             next_y = self.grid_y + chosen_move[1]
@@ -305,14 +245,15 @@ class Bacteria:
                     self.has_eaten = True
                     self.eaten_count += 1
 
-        # Dibujar el punto con animación
+        # Draw the point in the new position
         self.draw_point()
+        self.initial_move = False
+
+        # Reduce life
         self.life_time -= 1
         if self.life_time <= 0:
             self.is_alive = False
             print(f"Bacteria {self.bacteria_id}: Muerta por inanición")
-            self.load_dead_sprites()  # Load death sprites
-            self.draw_dead_point()  # Draw death animation
         else:
             print(f"Bacteria {self.bacteria_id}: Vida restante: {self.life_time}")
 
@@ -323,8 +264,6 @@ class Bacteria:
         print(f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
         root = tk.Tk()
         root.withdraw()  # Oculta la ventana principal
-        print("Bacterias Sobrevivientes",
-                            f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
 
         # Si comió dos comidas, incrementar velocidad
         if self.eaten_count >= 2:
@@ -333,8 +272,7 @@ class Bacteria:
             # Mostrar alerta al usuario
             root = tk.Tk()
             root.withdraw()  # Oculta la ventana principal
-            print("Incremento de Velocidad",
-                                f"La bacteria {self.bacteria_id} ha incrementado su velocidad a {self.current_speed}.")
+
 
         # Resetear el contador de comidas
         self.eaten_count = 0
@@ -377,57 +315,3 @@ class Bacteria:
             # self.last_position = current_pos
             return True
         return False
-
-    def get_alternative_direction(self, current_x, current_y):
-        """Obtiene una dirección alternativa cuando hay colisión"""
-        possible_directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # derecha, abajo, izquierda, arriba
-        valid_directions = []
-
-        for dx, dy in possible_directions:
-            next_x = current_x + dx
-            next_y = current_y + dy
-
-            # Verificar si la nueva dirección está dentro de los límites
-            if (0 <= next_x < self.grid_size and
-                    0 <= next_y < self.grid_size and
-                    not self.will_collide(next_x, next_y)):
-
-                # Si estamos en el movimiento inicial o no hay dirección actual, aceptar cualquier dirección válida
-                if self.initial_move or self.current_direction is None:
-                    valid_directions.append((dx, dy))
-                # Si no es movimiento inicial, evitar retroceder
-                elif (dx, dy) != (-self.current_direction[0], -self.current_direction[1]):
-                    valid_directions.append((dx, dy))
-
-        return choice(valid_directions) if valid_directions else None
-
-    def draw_dead_point(self):
-        """Dibuja los sprites de muerte de la bacteria"""
-        if not self.is_alive and hasattr(self, 'dead_sprites'):
-            # Verificar si los sprites de muerte están cargados correctamente
-            if not self.dead_sprites:
-                print("Error: Los sprites de muerte no están cargados.")
-                return
-
-            # Añadir un contador para controlar la velocidad de animación de los sprites de muerte
-            if not hasattr(self, 'dead_sprite_animation_counter'):
-                self.dead_sprite_animation_counter = 0
-
-            self.dead_sprite_animation_counter += 1
-            dead_sprite_index = (self.dead_sprite_animation_counter // 5) % len(self.dead_sprites)
-
-            pixel_x = self.grid_x * self.cell_size
-            pixel_y = self.grid_y * self.cell_size
-
-            # Eliminar sprites anteriores
-            self.canvas.delete(f'bacteria_{self.bacteria_id}')
-            self.canvas.delete(f'bacteria_{self.bacteria_id}_text')
-            self.canvas.delete(f'bacteria_{self.bacteria_id}_sprite')
-
-            # Dibujar la bacteria usando un sprite de muerte
-            self.canvas.create_image(
-                pixel_x + self.cell_size // 2,  # Centrado en la celda
-                pixel_y + self.cell_size // 2,  # Centrado en la celda
-                image=self.dead_sprites[dead_sprite_index],  # Usar el sprite de muerte actual
-                tag=f'bacteria_{self.bacteria_id}_sprite'  # Etiqueta única para el sprite
-            )
