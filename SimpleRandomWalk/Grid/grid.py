@@ -12,6 +12,7 @@ class Grid:
         self.width = self.size * self.cell_size
         self.height = self.size * self.cell_size
         self.bg_image = None
+        self.load_food_sprites()
         # Crear el canvas
         self.canvas = tk.Canvas(
             self.root,
@@ -24,6 +25,49 @@ class Grid:
         # Crear la grid visual
         self.create_grid()
 
+    def load_food_sprites(self):
+        try:
+            self.food_sprites = []
+            for i in range(1, 11):
+                try:
+                    sprite_path = f"files/zombie/Food{i}.png"
+                    # Resize the image to a smaller size
+                    original_sprite = tk.PhotoImage(file=sprite_path)
+                    # Resize to a smaller dimension, e.g., 20x20 pixels
+                    smaller_sprite = original_sprite.subsample(2, 2)  # Divides size by 2
+                    self.food_sprites.append(smaller_sprite)
+                except Exception as e:
+                    print(f"Error loading food sprite {i}: {e}")
+                    self.food_sprites.append(None)
+        except Exception as e:
+            print(f"General error loading food sprites: {e}")
+
+    def draw_food(self, position, sprite_index=0):
+        x, y = position
+        pixel_x = x * self.cell_size
+        pixel_y = y * self.cell_size
+
+        if hasattr(self, 'food_sprites') and 0 <= sprite_index < len(self.food_sprites):
+            sprite = self.food_sprites[sprite_index]
+            if sprite is not None:
+                # Position the smaller sprite more centrally
+                return self.canvas.create_image(
+                    pixel_x + self.cell_size // 2,
+                    pixel_y + self.cell_size // 2,
+                    image=sprite,
+                    tag='food'
+                )
+
+        # Fallback remains the same
+        padding = self.cell_size // 4
+        return self.canvas.create_oval(
+            pixel_x + padding,
+            pixel_y + padding,
+            pixel_x + self.cell_size - padding,
+            pixel_y + self.cell_size - padding,
+            fill='red',
+            tag='food'
+        )
     def create_grid(self):
         """Crear la cuadrícula visual"""
         # Líneas verticales
@@ -77,20 +121,6 @@ class Grid:
         for position in self.food_positions:
             self.draw_food(position)
 
-    def draw_food(self, position):
-        """Dibujar comida en el canvas"""
-        x, y = position
-        pixel_x = x * self.cell_size
-        pixel_y = y * self.cell_size
-        padding = self.cell_size // 4
-        self.canvas.create_oval(
-            pixel_x + padding,
-            pixel_y + padding,
-            pixel_x + self.cell_size - padding,
-            pixel_y + self.cell_size - padding,
-            fill='red',
-            tag='food'
-        )
 
     def find_nearest_food(self, x, y, radius=2):
         """Buscar la comida más cercana dentro del radio especificado."""

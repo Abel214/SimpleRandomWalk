@@ -77,7 +77,7 @@ class Intermedio:
         steps_per_bacteria = 6
         panel_juego = PanelJuego(self.ventana_principal, self.ventana_intermedia, num_bacterias, num_food,
                                  steps_per_bacteria)
-        panel_juego.abrir_ventana("files/War3.png")
+        panel_juego.abrir_ventana("files/War.png")
 
 
     def volver_menu(self):

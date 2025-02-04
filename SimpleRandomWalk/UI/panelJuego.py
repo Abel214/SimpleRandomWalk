@@ -1,6 +1,6 @@
 import tkinter as tk
 from SimpleRandomWalk.Logica.bacteria import Bacteria
-from SimpleRandomWalk.Bacteria.grid import Grid
+from SimpleRandomWalk.Grid.grid import Grid
 
 MAX_CYCLES = 3
 

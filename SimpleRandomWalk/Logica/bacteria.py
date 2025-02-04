@@ -186,8 +186,8 @@ class Bacteria:
                 pixel_x + self.cell_size // 2,  # Centrado en el medio de la celda
                 pixel_y + self.cell_size // 2,  # Centrado en el medio de la celda
                 text=str(self.bacteria_id),  # El número identificador
-                fill='white',  # Color del texto
-                font=('Arial', 8, 'bold'),  # Estilo y tamaño de la fuente
+                fill='red',  # Color del texto
+                font=('Arial', 12, 'bold'),  # Estilo y tamaño de la fuente
                 tag=f'bacteria_{self.bacteria_id}_text'  # Etiqueta única para el texto
             )
 
