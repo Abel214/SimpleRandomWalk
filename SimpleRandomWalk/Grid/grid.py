@@ -37,7 +37,6 @@ class Grid:
                     smaller_sprite = original_sprite.subsample(2, 2)  # Divides size by 2
                     self.food_sprites.append(smaller_sprite)
                 except Exception as e:
-                    print(f"Error loading food sprite {i}: {e}")
                     self.food_sprites.append(None)
         except Exception as e:
             print(f"General error loading food sprites: {e}")

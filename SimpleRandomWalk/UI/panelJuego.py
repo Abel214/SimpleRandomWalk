@@ -2,7 +2,7 @@ import tkinter as tk
 from SimpleRandomWalk.Logica.bacteria import Bacteria
 from SimpleRandomWalk.Grid.grid import Grid
 
-MAX_CYCLES = 3
+MAX_CYCLES = 7
 
 class PanelJuego:
     def __init__(self, root, Intermedio, num_bacterias=0, num_food=0, steps_per_bacteria=0):
@@ -80,7 +80,18 @@ class PanelJuego:
 
         # Crear las bacterias con identificadores únicos
 
+    def show_speed_increase_message(self, message):
+        """Muestra un mensaje cuando una bacteria aumenta su velocidad"""
+        # Si ya existe un mensaje previo, eliminarlo
+        if self.message_label is not None:
+            self.message_label.destroy()
 
+        # Crear el mensaje
+        self.message_label = tk.Label(self.grid.canvas, text=message, font=("Arial", 14), fg="blue")
+        self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
+
+        # Desaparecer el mensaje después de 2 segundos
+        self.root.after(2000, self.message_label.destroy)
     def start_simulation(self):
         """Iniciar la simulación del movimiento"""
         self.grid.spawn_initial_food(self.num_food)  # Generar las comidas iniciales
@@ -127,7 +138,6 @@ class PanelJuego:
             print(f"Bacterias vivas en ciclo {self.current_cycle}: {[b.bacteria_id for b in alive_bacterias]}")
             self.simulation_timer = self.root.after(1000, self.simulate_step)
 
-
     def start_new_cycle(self, alive_bacterias):
         """Iniciar un nuevo ciclo de la simulación sin regenerar comida."""
         if self.current_cycle >= MAX_CYCLES:
@@ -150,12 +160,36 @@ class PanelJuego:
                     print(f"Bacteria {bacteria.bacteria_id} no sobrevive al siguiente ciclo. Eliminada.")
                     self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}')
                     self.grid.canvas.delete(f'bacteria_{bacteria.bacteria_id}_text')
-
         if surviving_bacteria:
-            print(f"Bacterias que pasan al ciclo {self.current_cycle}: {[b.bacteria_id for b in surviving_bacteria]}")
+            # Mostrar las bacterias que pasan al siguiente ciclo
+            surviving_bacteria_ids = [b.bacteria_id for b in surviving_bacteria]
+            print(f"Bacterias que pasan al ciclo {self.current_cycle}: {surviving_bacteria_ids}")
+
+            # Si ya existe un mensaje previo, eliminarlo
+            if self.message_label is not None:
+                self.message_label.destroy()
+
+            # Crear el mensaje con las bacterias que pasan
+            message = f"Ciclo {self.current_cycle} iniciado.\nBacterias sobrevivientes: {', '.join(map(str, surviving_bacteria_ids))}"
+            self.message_label = tk.Label(self.grid.canvas, text=message, font=("Arial", 14), fg="green")
+            self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
+            self.root.after(1000, self.message_label.destroy)
+
+            # Continuar con la simulación
             self.simulation_timer = self.root.after(1000, self.simulate_step)
         else:
             print("Ninguna bacteria sobrevivió al nuevo ciclo. Simulación finalizada.")
+
+            # Si ya existe un mensaje previo, eliminarlo
+            if self.message_label is not None:
+                self.message_label.destroy()
+
+            # Crear el mensaje de finalización
+            message = "Simulación finalizada. Ninguna bacteria sobrevivió."
+            self.message_label = tk.Label(self.grid.canvas, text=message, font=("Arial", 14), fg="red")
+            self.message_label.place(relx=0.5, rely=0.5, anchor="center")  # Ubicarlo en el centro del canvas
+
+            # Finalizar la simulación
             self.end_simulation()
 
     def end_simulation(self):

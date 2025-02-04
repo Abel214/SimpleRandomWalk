@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 class Bacteria:
-    def __init__(self, grid, bacteria_id, steps_per_bacteria, speed=0):
+    def __init__(self,grid, bacteria_id, steps_per_bacteria, speed=0):
         self.grid = grid
         self.canvas = grid.canvas
         self.cell_size = grid.cell_size
@@ -12,7 +12,7 @@ class Bacteria:
         self.life_time = steps_per_bacteria + 1
         self.steps_per_bacteria = steps_per_bacteria
         self.num_cycles = 0
-        self.max_cycles = 3
+        self.max_cycles = 7
         self.initial_move = True
         self.last_position = None
         self.bacteria_id = bacteria_id
@@ -25,7 +25,7 @@ class Bacteria:
         self.waiting_for_others = False
         self.current_direction = None
         self.create_initial_point()
-
+        self.panel_juego = None
     def create_initial_point(self):
         """Crea la bacteria en una de las cuatro esquinas y define su dirección inicial"""
         corners = [(0, 0), (0, self.grid_size - 1),
@@ -262,17 +262,16 @@ class Bacteria:
     def pass_to_next_cycle(self):
         self.num_cycles += 1
         print(f"Bacteria {self.bacteria_id}: Iniciando ciclo {self.num_cycles}")
-        root = tk.Tk()
-        root.withdraw()  # Oculta la ventana principal
+
+        # Lista para almacenar las bacterias que incrementaron su velocidad
+        speed_increase_bacteria = []
 
         # Si comió dos comidas, incrementar velocidad
         if self.eaten_count >= 2:
             self.current_speed += 1
             print(f"Bacteria {self.bacteria_id}: Velocidad aumentada a {self.current_speed}")
-            # Mostrar alerta al usuario
-            root = tk.Tk()
-            root.withdraw()  # Oculta la ventana principal
-
+            # Agregar la bacteria a la lista de bacterias con aumento de velocidad
+            speed_increase_bacteria.append(self.bacteria_id)
 
         # Resetear el contador de comidas
         self.eaten_count = 0
@@ -283,7 +282,6 @@ class Bacteria:
             return False
 
         # Modificar la condición de supervivencia
-        # Si ha comido al menos una vez en el ciclo anterior, sigue viva
         if not self.has_eaten:
             self.is_alive = False
             print(f"Bacteria {self.bacteria_id}: Muerta porque no comió.")
@@ -295,6 +293,7 @@ class Bacteria:
         self.initial_move = True
 
         self.create_initial_point()
+
 
         return True
 
