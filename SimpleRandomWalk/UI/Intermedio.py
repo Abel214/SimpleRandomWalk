@@ -61,9 +61,9 @@ class Intermedio:
     def seleccionar_invierno(self):
         self.ventana_intermedia.withdraw()
         print("Bioma de Invierno seleccionado")
-        num_bacterias = 1
+        num_bacterias = 10
         num_food = 40
-        steps_per_bacteria = 6
+        steps_per_bacteria = 5
         panel_juego = PanelJuego(self.ventana_principal, self.ventana_intermedia, num_bacterias, num_food,
                                  steps_per_bacteria)
         panel_juego.abrir_ventana("files/War2.png")
@@ -73,8 +73,8 @@ class Intermedio:
         self.ventana_intermedia.withdraw()
         print("Bioma de Desierto seleccionado")
         num_bacterias = 5
-        num_food = 30
-        steps_per_bacteria = 6
+        num_food = 20
+        steps_per_bacteria = 7
         panel_juego = PanelJuego(self.ventana_principal, self.ventana_intermedia, num_bacterias, num_food,
                                  steps_per_bacteria)
         panel_juego.abrir_ventana("files/War.png")
